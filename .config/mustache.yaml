@@ -1,0 +1,10 @@
+{
+  "project":
+    {
+      "description": "Duoids relate a pair of monoids, where one can be seen as “parallel” and the other “sequential”.",
+      "name": "duoids",
+      "repo": "sellout/duoids",
+      "summary": "Unifying parallel and sequential operations",
+    },
+  "type": { "name": "haskell" },
+}
