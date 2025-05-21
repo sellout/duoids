@@ -1,0 +1,22 @@
+-- Tune the solver to improve the odds of finding a solution. This is useful for
+-- initializing and updating dependency bounds, but shouldn’t have an impact on
+-- regular usage, because the explicit bounds reduce the search space.
+max-backjumps: -1
+minimize-conflict-set: true
+reorder-goals: true
+
+program-options
+  ghc-options:
+    -Werror
+
+tests: True
+
+constraints:
+  -- 0.3 is the first version with @Ord (Graph a)@, which is used by law testing.
+  algebraic-graphs >= 0.3,
+
+packages:
+  ./core/duoids.cabal
+  ./algebraic-graphs/algebraic-graph-duoids.cabal
+  ./hedgehog/duoids-hedgehog.cabal
+  ./transformers/duoidal-transformers.cabal
