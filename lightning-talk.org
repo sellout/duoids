@@ -1,0 +1,205 @@
+#+title: What’s a “duoid” and why do I care?
+
+Let’s answer the second part first – why do you care? Here’s a simple example using [[https://github.com/sellout/duoids#readme][the ~duoids~ library]].
+
+#+begin_src haskell
+  {-# language PackageImports, -- lets me annotate imports with package names
+               ApplicativeDo, -- use Applicative ops in `do` desugaring
+               QualifiedDo -- override definitions of desugared `do` operations
+               #-}
+  import qualified "duoids" Control.Duoidal.Do as Duoidal
+
+  Duoidal.do
+    x <- Left ["Couldn't find record x"]
+    y <- Left ["Couldn't find record y"]
+    Left ["Couldn't merge records " <> x <> " and " <> y]
+#+end_src
+
+What do you expect the result of this ~do~ block is? Even though ~ApplicativeDo~ is enabled, the last statement has a dependency on the other statements, so it forces monadic semantics.
+
+There’s no magic with ~Either~,  ~OverloadedLists~, or ~OverloadedStrings~. So this really is ~Data.Either.Either [String] a~. And that mean’s we’re getting monadic no matter what ~ApplicativeDo~ says.
+
+So, with that in mind, your expectation is probably
+
+#+begin_src haskell
+Left ["Couldn't find record x"]
+#+end_src
+
+But the reality is
+#+begin_src haskell
+Left ["Couldn't find record x", "Couldn’t find record y"]
+#+end_src
+
+It’s like we used ~Validation~ somehow.
+
+But if the first operations succeed,
+
+#+begin_src haskell
+Duoidal.do
+  x <- Right "x"
+  y <- Right "y"
+  Left ["Couldn't merge records " <> x <> " and " <> y]
+#+end_src
+
+#+begin_src haskell
+Left ["Couldn't merge records x and y"]
+#+end_src
+
+Well, that’s odd – ~Validation~ can’t do that. And ~Either~ can’t do the first bit. So what’s happening here?
+
+* mixing ~Monad~ with an “incompatible” ~Applicative~
+
+What’s happening behind the scenes (in that ~Control.Duoidal.Do~ module) is that monadic operations (~>>=~, ~>>~, ~return~, etc) are defined using the existing ~Monad (Either a)~ instance while applicative operations (~<*>~, ~pure~, etc.) are defined using ~Validation~-like semantics.
+
+This gives us an easy way
+
+1. enable the ~ApplicativeDo~ and ~QualifiedDo~ language extensions,
+2. import ~Control.Duoidal.Do~ (from the ~duoids~ package), and
+3. replace some ~do~ with ~Duoidal.do~.
+
+to mix the accumulation of ~Validation~ with the sequentiality of ~Either~ without having to change representations.
+
+* this also works for other types
+
+Can you think of anything else where you might run into similar annoyances as ~Validation~?
+
+~IO~?
+
+~Concurrently~ is right there in ~base~, but it’s often neglected. For the same reasons as ~Validation~ – the annoyances of moving back and forth when you need sequentiality.
+
+And yes, it has the same semantics. You can now just put a bunch of independent operations into a ~Duoidal.do~ block, they’ll execute in parallel, and you’ll get ~IO~ back.
+
+#+begin_src haskell
+Duoidal.do
+  config <- readFile "config"
+  state <- readFile "state"
+  writeOutputFrom config state
+#+end_src
+
+* That looks useful! So … what’s a “duoid”?
+
+It’s an algebraic structure that captures these the relationship between *parallel* and *sequential* semantics.
+
+It specifically relates two monoids, one of which is a comonoid in the domain of the other. The laws look like this:
+
+- *convert identity*: ~0 ---> 1~
+- *join identity*: ~1 | 1 ---> 1~
+- *split identity*: ~0 ---> 0 >>> 0~
+- *interchange*: ~(a >>> b) | (c >>> d) ---> (a | c) >>> (b | d)~
+
+which are a bit subtle, but the hand-wavy understanding is generally sufficient.
+
+What we have here looks a lot like
+
+#+begin_src haskell
+  -- the generic definitions
+
+  newtype Parallel f a = Par (f a)
+  newtype Sequential f a = Seq (f a)
+  class (Applicative (Parallel f), Monad (Sequetial f)) => Duoidal f
+  instance (Applicative (Parallel f), Monad (Sequetial f)) => Duoidal f
+
+  -- what you need to define to take advantage for each type
+
+  deriving newtype instance Functor (Sequential (Either a))
+  deriving newtype instance Applicative (Sequential (Either a))
+  deriving newtype instance Monad (Sequential (Either a))
+  deriving newtype instance Functor (Parallel (Either a))
+
+  instance (Semigroup a) => Applicative (Parallel (Either a)) where
+    pure = Par . pure
+    Par x <*> Par y = case (x, y) of
+      (Left e, Left e') -> Left $ e <> e'
+      (Left e, Right _) -> Left e
+      (Right _, Left e') -> Left e'
+      (Right f, Right a) -> Right $ f a
+#+end_src
+
+* Where else do they show up?
+
+We just looked at a couple in the category of endofunctors over *Hask*. Here are some in *Hask*:
+
+** from ~algebraic-graphs~
+
+#+begin_src haskell
+     data Graph a
+       = Empty -- ^ the empty graph
+       | Vertex a -- ^ a singleton graph
+       | -- | two independent graphs with no ediges between them
+         Overlay (Graph a) (Graph a)
+       | -- | two graphs where there is an edge from each `Vertex` in the first
+         --   to each `Vertex` in the second
+         Connect (Graph a) (Graph a)
+#+end_src
+
+This is a nice inductive definition of a graph. I love it because of recursion schemes, where I use graphs /constantly/. Now, I also love it because of duoids.
+
+#+begin_src haskell
+  instance Duoid (Graph a) where
+    unit = Empty
+    parallelize = Overlay -- parallel graphs don’t connect
+    sequence = Connect -- the vertices in the first come “before” the vertices in the second
+#+end_src
+
+Does this look like anything? I think ~Graph~ is the free (normal) duoid.
+
+*** Wait … why did you put “(normal)” there?
+
+Ah, yeah, duoids are a bit more general than what we’ve seen thus far.
+
+Remember I said they were /two/ monoids? Well, each monoid has an identity, right? So which identity are we getting from ~pure~ and ~unit~?
+
+Well, we /mostly/ don’t have to think about that, because in a /normal/ duiod, there’s an isomorphism between the two identities. And, when the identities coincide (as in ~Graph~ ’s ~Empty~), the isomorphism is trivial.
+
+** in the category ~[Type -> Type, Constraint]~
+
+(That’s the category that contains the type classes ~Functor~, ~Applicative~, and ~Monad~ themselves.)
+
+~Applicative~ and ~Monad~ themselves form a normal duoid! And here’s where we see a case of isomorphic (but not identical) identities.
+
+“But wait,” you say, “ ~return = pure~ , so the identities /do/ coincide!”
+
+Yes, but … ~Applicative~ and ~Monad~ should technically have distinct identities. That is, we shouldn’t be able to define ~return = pure~. The type of ~pure~ /should/ be ~(() -> a) -> f a~. But then we just have ~return = pure . const~ and ~pure = return . ($ ())~ , so the isomorphism is still simple. But you can also see how that version of ~pure~ isn’t particularly useful. It’s required, though, if you start doing stuff category-polymorphically.
+
+
+* there’s more …
+
+There are more instances, but I mean we can also take duoids further.
+
+I have another project /Beautiful Failures/ that’s intended to be a high-level library for handling errors in a principled way. (It doesn’t compete with the very cool ~diagnose~ library, which is more about the presentation layer. The two could work well together.)
+
+There’s at least one other fairly common monoid in the category ~[Type -> Type, Constraint]~ (again, that’s where ~Applicative~ and ~Monad~ live). Anyone have an idea?
+
+It’s ~Alternative~.
+
+And … there are other structures that relate two monoids. Like … a *lattice*.
+
+And, guess what … ~Alternative f~ and ~Applicative (Parallel f)~ /should/ form a lattice.
+
+Then, we can extend the lattice to be a *Heyting algebra* (which is just a little weaker than a *Boolean algebra*) – it has ~&&~, ~||~, etc., but no excluded middle (~⌐ (⌐ p) ↛ p~).
+
+Ok, wait, that’s a lot of structures. /What’s/ happening here?
+
+** “With our powers combined …”
+
+We now have three identities
+
+- ~pure~ from ~Applicative~ and
+- ~return~ from ~Monad~ (which is isomorphic to ~pure~ at worst)
+- ~empty~ from ~Alternative~
+
+and four operations
+
+- ~liftA2~ from ~Applicative~ (both our ~&&~ and the parallel operation for the duoid)
+- ~join~ from ~Monad~ (the sequential operation from the duoid)
+- ~<|>~ from ~Alternative~ (our ~||~)
+- and an implication operation (~=>~)
+
+#+begin_example
+                   ┌──────────── duoid ───────────┐
+  =>  (empty  <|>)  (liftA2  pure)  (return  join)
+│    └───────── lattice ──────────┘│
+└──────── Heyting algebra ─────────┘
+#+end_example
+
+As we already talked about how the duoid manages the accumulation & sequential aspects of error handling. With the other aspects, we also unify handling of stack traces and warnings, plus gives us new insight into the relationship between different errors, and we can use Boolean transformations to simplify the set of failures presented to the user – for example., deduplicating multiple instances of the same “unknown identifier” error or grouping multiple errors that may all have consequences of the same issue.
