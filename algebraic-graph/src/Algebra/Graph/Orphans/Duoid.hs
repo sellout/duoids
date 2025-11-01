@@ -1,6 +1,7 @@
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
+{-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-methods:sconcat #-}
 
 module Algebra.Graph.Orphans.Duoid () where
 

@@ -1,5 +1,6 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-methods:sconcat #-}
 
 -- | Provides duoidal operations on functors. This lets us easily mix and match "parallel" and
 --  "sequential" operations on structures that have multiple viable `Applicative` instances, like

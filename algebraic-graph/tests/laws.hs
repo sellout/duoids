@@ -1,5 +1,6 @@
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-decls:genGraph #-}
 
 module Main (main) where
 

@@ -43,6 +43,7 @@
     flake-utils,
     flaky,
     flaky-haskell,
+    hpack-dhall,
     nixpkgs,
     self,
     systems,
@@ -51,14 +52,26 @@
 
     supportedSystems = import systems;
 
+    # cabalPackages = pkgs: hpkgs:
+    #   flaky-haskell.lib.cabalProject2nix
+    #   ./cabal.project
+    #   pkgs
+    #   hpkgs
+    #   (old: {
+    #     configureFlags = old.configureFlags ++ ["--ghc-options=-Werror"];
+    #   });
     cabalPackages = pkgs: hpkgs:
-      flaky-haskell.lib.cabalProject2nix
-      ./cabal.project
-      pkgs
-      hpkgs
-      (old: {
+      builtins.mapAttrs (_: path: pkgs.shellchecked ((hpkgs.callPackage path {}).overrideAttrs (old: {
         configureFlags = old.configureFlags ++ ["--ghc-options=-Werror"];
-      });
+        ## Cabal uses an SPDX license expression, which I can’t currently
+        ## convert to Nix easily, so just replace it here.
+        meta.license = [nixpkgs.lib.licenses.agpl3Only];
+      })))
+        {duoids = ./duoids.nix;
+         algebraic-graph-duoids = ./algebraic-graph-duoids.nix;
+         duoids-hedgehog = ./duoids-hedgehog.nix;
+         transformer-duoids = ./transformer-duoids.nix;
+        };
   in
     {
       schemas = {
@@ -105,7 +118,16 @@
         ##     Nixpkgs should be pushed upstream to Flaky. This is for
         ##     dependencies that we override for reasons local to the project.
         haskellDependencies = final: prev: hfinal: hprev: {
+          hpack-dhall = final.haskell.lib.dontCheck (final.haskell.lib.doJailbreak (hfinal.callCabal2nix "hpack-dhall" hpack-dhall {}));
+          # hpack-dhall =
+          #   final.haskell.lib.dontCheck
+          #     (final.haskell.lib.doJailbreak hprev.hpack-dhall);
           network = final.haskell.lib.dontCheck hprev.network;
+          no-recursion = hfinal.callHackageDirect {
+            pkg = "no-recursion";
+            ver = "0.2.0.0";
+            sha256 = "h8OApLfrN2faMy9WfO3IfZh1TmHDIqYZg1257H5m4L4=";
+          } {};
           warp = final.haskell.lib.dontCheck hprev.warp;
         };
       };
@@ -217,7 +239,10 @@
 
   inputs = {
     ## Flaky should generally be the source of truth for its inputs.
-    flaky.url = "github:sellout/flaky";
+    flaky = {
+      inputs.project-manager.url = "github:sellout/project-manager/cabal-mangling";
+      url = "github:sellout/flaky";
+    };
 
     flake-utils.follows = "flaky/flake-utils";
     nixpkgs.follows = "flaky/nixpkgs";
@@ -226,6 +251,11 @@
     flaky-haskell = {
       inputs.flaky.follows = "flaky";
       url = "github:sellout/flaky-haskell";
+    };
+
+    hpack-dhall = {
+      flake = false;
+      url = "github:sellout/hpack-dhall/convert-maps";
     };
   };
 }

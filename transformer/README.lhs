@@ -9,40 +9,6 @@ Duoids relate a pair of monoids, where one can be seen as “parallel” and the
 
 ## usage
 
-```haskell top:0
-{-# language ApplicativeDo, QualifiedDo #-}
-```
-```haskell top:2
-import "duoids" Control.Duoidal.Do qualified as Duoidal
-import "hspec-expectations" Test.Hspec.Expectations (shouldBe)
-```
-
-```haskell
--- | When the independent steps succeed, we just return the dependent result, like a `Monad`.
-dependent :: Either [String] String
-dependent = Duoidal.do
-  x <- Right "x"
-  y <- Right "y"
-  Left ["Couldn't merge records " <> x <> " and " <> y]
-```
-```haskell top:100
-  dependent `shouldBe` Left ["Couldn't merge records x and y"]
-```
-
-```haskell
--- | But when the independent steps fail, we collect all the independent failures, like `Validation`.
-independent :: Either [String] String
-independent = Duoidal.do
-  x <- Left ["Couldn't find record x"]
-  y <- Left ["Couldn't find record y"]
-  Left ["Couldn't merge records " <> x <> " and " <> y]
-```
-```haskell top:100
-  independent `shouldBe` Left ["Couldn't find record x", "Couldn't find record y"]
-```
-
-**NB**: This package currently supports GHC 9.6 and newer. There is no known impediment to supporting older versions. If you need support for an older version, please [open an issue](https://github.com/sellout/duoids/issues). Even if it already compiles on that version, knowing that someone is using it will allow me to add it to my support matrix so it’s likely to continue working going forward.
-
 ## versioning
 
 This project largely follows the [Haskell Package Versioning Policy](https://pvp.haskell.org/) (PVP), but is more strict in some ways.
@@ -133,26 +99,6 @@ You should review the [license report](docs/license-report.md) for details about
 
 Other projects similar to this one, and how they differ.
 
-### [Haskerwaul](https://github.com/sellout/haskerwaul#readme)
+### Haskerwaul
 
-A broader package that contains a more general (category polymorphic) implementation of duoids.
-
-### [United Monoids](https://github.com/snowleopard/united)
-
-Andrey Mokhov’s independently-discovered implementation. I think united monoids are normal duoids in **Set**.
-
------
-
-### boilerplate (for [`markdown-unlit`](https://github.com/sol/markdown-unlit#readme))
-
-```haskell top:1
-{-# language Safe #-}
-import "base" Data.Either (Either (Left, Right))
-import "base" Data.Semigroup ((<>))
-import "base" Data.String (String)
-import "base" System.IO (IO)
-```
-```haskell top:99
-main :: IO ()
-main = do
-```
+### united-monoids
