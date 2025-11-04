@@ -100,6 +100,7 @@ common defaults
   import: GHC2024
   build-depends:
     base ^>= {4.18.0, 4.19.0, 4.20.0, 4.21.0},
+    no-recursion,
   ghc-options:
     -Weverything
     -- This one just reports unfixable things, AFAICT.
@@ -109,6 +110,7 @@ common defaults
     -- Warns even when `Unsafe` is explicit, not inferred. See
     -- https://gitlab.haskell.org/ghc/ghc/-/issues/16689
     -Wno-unsafe
+    -fplugin=NoRecursion
   if impl(ghc >= 9.8.1)
     ghc-options:
       -- Inference good.
