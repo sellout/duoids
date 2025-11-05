@@ -32,7 +32,8 @@ tested-with:
 
 source-repository head
   type: git
-  location: https://github.com/sellout/duoids
+  location: https://github.com/sellout/duoids.git
+  subdir: algebraic-graphs
 
 -- This mimics the GHC2024 extension
 -- (https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/control.html?highlight=doandifthenelse#extension-GHC2024),
