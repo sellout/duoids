@@ -1,5 +1,6 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-methods:many,some #-}
 
 -- |
 -- Copyright: 2024 Greg Pfeil

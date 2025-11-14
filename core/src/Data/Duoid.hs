@@ -1,5 +1,6 @@
 {-# LANGUAGE Safe #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-methods:sconcat #-}
 
 -- |
 -- Copyright: 2024 Greg Pfeil
@@ -31,7 +32,13 @@ import "base" Data.Kind (Constraint, Type)
 import "base" Data.Monoid (Monoid, mempty)
 import "base" Data.Ord (Ord, max, (<), (<=), (>))
 import "base" Data.Ratio (Ratio, Rational, (%))
-import "base" Data.Semigroup (Semigroup, (<>))
+import "base" Data.Semigroup
+  ( Semigroup,
+    stimes,
+    stimesIdempotentMonoid,
+    stimesMonoid,
+    (<>),
+  )
 import "base" Data.Traversable (Traversable)
 import "base" Data.Word (Word, Word16, Word32, Word64, Word8)
 import "base" GHC.Real (infinity)
@@ -89,14 +96,16 @@ type Comm :: Type -> Type
 newtype Comm a = Comm a
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
-instance (Semigroup a) => Semigroup (Par (Comm a)) where
+instance (Monoid a) => Semigroup (Par (Comm a)) where
   Par (Comm x) <> Par (Comm y) = Par . Comm $ x <> y
+  stimes = stimesMonoid
 
 instance (Monoid a) => Monoid (Par (Comm a)) where
   mempty = Par $ Comm mempty
 
-instance (Semigroup a) => Semigroup (Seq (Comm a)) where
+instance (Monoid a) => Semigroup (Seq (Comm a)) where
   Seq (Comm x) <> Seq (Comm y) = Seq . Comm $ x <> y
+  stimes = stimesMonoid
 
 instance (Monoid a) => Monoid (Seq (Comm a)) where
   mempty = Seq $ Comm mempty
@@ -106,6 +115,7 @@ instance (Monoid a) => Monoid (Seq (Comm a)) where
 -- | Maximum.
 instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Semigroup (Par a) where
   Par x <> Par y = Par $ max x y
+  stimes = stimesIdempotentMonoid
 
 -- | Maximum.
 instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Monoid (Par a) where
@@ -125,6 +135,7 @@ instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Semigroup (Seq a) where
               if z < x
                 then maxBound
                 else z
+  stimes = stimesMonoid
 
 -- | Saturating addition.
 instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Monoid (Seq a) where
@@ -137,6 +148,7 @@ instance
   Semigroup (Par (Ratio a))
   where
   Par x <> Par y = Par $ max x y
+  stimes = stimesIdempotentMonoid
 
 -- | Maximum.
 instance
@@ -164,6 +176,7 @@ instance
               if z < x
                 then maxBound % 1
                 else z
+  stimes = stimesMonoid
 
 -- | Saturating addition.
 instance
@@ -186,6 +199,7 @@ instance Normal (Ratio Word8)
 -- | Maximum.
 instance Semigroup (Par (Ratio Natural)) where
   Par x <> Par y = Par $ max x y
+  stimes = stimesIdempotentMonoid
 
 -- | Maximum.
 instance Monoid (Par (Ratio Natural)) where
@@ -194,6 +208,7 @@ instance Monoid (Par (Ratio Natural)) where
 -- | Saturating addition.
 instance Semigroup (Seq (Ratio Natural)) where
   Seq x <> Seq y = Seq $ x + y
+  stimes = stimesMonoid
 
 -- | Saturating addition.
 instance Monoid (Seq (Ratio Natural)) where
@@ -202,6 +217,7 @@ instance Monoid (Seq (Ratio Natural)) where
 -- | Maximum.
 instance Semigroup (Par Rational) where
   Par x <> Par y = Par $ max x y
+  stimes = stimesIdempotentMonoid
 
 -- | Maximum.
 instance Monoid (Par Rational) where
@@ -229,6 +245,7 @@ instance Semigroup (Seq Rational) where
                   if y == infinity
                     then infinity
                     else x + y
+  stimes = stimesMonoid
 
 -- | Saturating addition.
 instance Monoid (Seq Rational) where
@@ -239,12 +256,14 @@ instance Duoid Rational
 
 instance Semigroup (Par Natural) where
   Par x <> Par y = Par $ max x y
+  stimes = stimesIdempotentMonoid
 
 instance Monoid (Par Natural) where
   mempty = Par 0
 
 instance Semigroup (Seq Natural) where
   Seq x <> Seq y = Seq $ x + y
+  stimes = stimesMonoid
 
 instance Monoid (Seq Natural) where
   mempty = Seq 0
@@ -274,12 +293,14 @@ instance Normal Word8
 
 instance Semigroup (Par ()) where
   Par () <> Par () = Par ()
+  stimes = stimesIdempotentMonoid
 
 instance Monoid (Par ()) where
   mempty = Par ()
 
 instance Semigroup (Seq ()) where
   Seq () <> Seq () = Seq ()
+  stimes = stimesIdempotentMonoid
 
 instance Monoid (Seq ()) where
   mempty = Seq ()
@@ -288,12 +309,14 @@ instance Normal ()
 
 instance (Duoid a, Duoid b) => Semigroup (Par (a, b)) where
   Par (a, b) <> Par (a', b') = Par (a |-| a', b |-| b')
+  stimes = stimesMonoid
 
 instance (Duoid a, Duoid b) => Monoid (Par (a, b)) where
   mempty = Par (pempty, pempty)
 
 instance (Duoid a, Duoid b) => Semigroup (Seq (a, b)) where
   Seq (a, b) <> Seq (a', b') = Seq (a >-> a', b >-> b')
+  stimes = stimesMonoid
 
 instance (Duoid a, Duoid b) => Monoid (Seq (a, b)) where
   mempty = Seq (sempty, sempty)
@@ -302,12 +325,14 @@ instance (Normal a, Normal b) => Normal (a, b)
 
 instance (Duoid a, Duoid b, Duoid c) => Semigroup (Par (a, b, c)) where
   Par (a, b, c) <> Par (a', b', c') = Par (a |-| a', b |-| b', c |-| c')
+  stimes = stimesMonoid
 
 instance (Duoid a, Duoid b, Duoid c) => Monoid (Par (a, b, c)) where
   mempty = Par (pempty, pempty, pempty)
 
 instance (Duoid a, Duoid b, Duoid c) => Semigroup (Seq (a, b, c)) where
   Seq (a, b, c) <> Seq (a', b', c') = Seq (a >-> a', b >-> b', c >-> c')
+  stimes = stimesMonoid
 
 instance (Duoid a, Duoid b, Duoid c) => Monoid (Seq (a, b, c)) where
   mempty = Seq (sempty, sempty, sempty)
@@ -320,6 +345,7 @@ instance
   where
   Par (a, b, c, d) <> Par (a', b', c', d') =
     Par (a |-| a', b |-| b', c |-| c', d |-| d')
+  stimes = stimesMonoid
 
 instance (Duoid a, Duoid b, Duoid c, Duoid d) => Monoid (Par (a, b, c, d)) where
   mempty = Par (pempty, pempty, pempty, pempty)
@@ -330,6 +356,7 @@ instance
   where
   Seq (a, b, c, d) <> Seq (a', b', c', d') =
     Seq (a >-> a', b >-> b', c >-> c', d >-> d')
+  stimes = stimesMonoid
 
 instance (Duoid a, Duoid b, Duoid c, Duoid d) => Monoid (Seq (a, b, c, d)) where
   mempty = Seq (sempty, sempty, sempty, sempty)
@@ -340,12 +367,14 @@ instance (Normal a, Normal b, Normal c, Duoid d) => Normal (a, b, c, d)
 
 instance (Duoid b) => Semigroup (Par (a -> b)) where
   Par f <> Par g = Par $ liftA2 (|-|) f g
+  stimes = stimesMonoid
 
 instance (Duoid b) => Monoid (Par (a -> b)) where
   mempty = Par $ const pempty
 
 instance (Duoid b) => Semigroup (Seq (a -> b)) where
   Seq f <> Seq g = Seq $ liftA2 (>->) f g
+  stimes = stimesMonoid
 
 instance (Duoid b) => Monoid (Seq (a -> b)) where
   mempty = Seq $ const sempty

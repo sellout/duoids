@@ -107,6 +107,11 @@
         haskellDependencies = final: prev: hfinal: hprev: {
           binary-instances = final.haskell.lib.dontCheck hprev.binary-instances;
           network = final.haskell.lib.dontCheck hprev.network;
+          no-recursion = hfinal.callHackageDirect {
+            pkg = "no-recursion";
+            ver = "0.3.0.0";
+            sha256 = "qgwGWCyLMLxU80522Wtz+pwg8WtWCZFs8X86WAogE/o=";
+          } {};
           warp = final.haskell.lib.dontCheck hprev.warp;
         };
       };
