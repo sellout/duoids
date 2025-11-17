@@ -55,7 +55,9 @@
       flaky-haskell.lib.cabalProject2nix
       ./cabal.project
       pkgs
-      hpkgs
+      ## Earlier versions of Cabal fail when plugins are used for some versions
+      ## of GHC 9.6 and 9.8. See haskell/cabal#9375.
+      (hpkgs.extend (final: _: {Cabal = final.Cabal_3_12_1_0;}))
       (old: {
         configureFlags = old.configureFlags ++ ["--ghc-options=-Werror"];
       });
