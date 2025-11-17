@@ -55,7 +55,9 @@
       flaky-haskell.lib.cabalProject2nix
       ./cabal.project
       pkgs
-      hpkgs
+      ## Earlier versions of Cabal fail when plugins are used for some versions
+      ## of GHC 9.6 and 9.8. See haskell/cabal#9375.
+      (hpkgs.extend (final: _: {Cabal = final.Cabal_3_12_1_0;}))
       (old: {
         configureFlags = old.configureFlags ++ ["--ghc-options=-Werror"];
       });
@@ -107,6 +109,11 @@
         haskellDependencies = final: prev: hfinal: hprev: {
           binary-instances = final.haskell.lib.dontCheck hprev.binary-instances;
           network = final.haskell.lib.dontCheck hprev.network;
+          no-recursion = hfinal.callHackageDirect {
+            pkg = "no-recursion";
+            ver = "0.3.0.0";
+            sha256 = "qgwGWCyLMLxU80522Wtz+pwg8WtWCZFs8X86WAogE/o=";
+          } {};
           warp = final.haskell.lib.dontCheck hprev.warp;
         };
       };

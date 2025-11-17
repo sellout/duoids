@@ -1,5 +1,7 @@
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE TypeApplications #-}
+-- TODO: Remove this once yaya-hedgehog has improved recursive generators.
+{-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-decls:genGraph #-}
 
 -- |
 -- Copyright: 2024 Greg Pfeil
