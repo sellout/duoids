@@ -85,8 +85,6 @@
     };
     latestGhcVersion = "9.10.1";
   };
-  ## TODO: Temporarily disabled Nix CI due to a job proliferation issue.
-  services.nix-ci.enable = lib.mkForce false;
 
   ## publishing
   services.github.enable = true;
