@@ -12,7 +12,9 @@ homepage: https://github.com/sellout/duoids#readme
 bug-reports: https://github.com/sellout/duoids/issues
 category: Algebra, Error Handling, Graphs
 build-type: Custom
-license: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- TODO: Remove the redundant `OR AGPL-3.0-only` once
+--       haskell/hackage-server#1440 is fixed.
+license: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR AGPL-3.0-only OR LicenseRef-commercial
 license-files:
   LICENSE
   LICENSE.AGPL-3.0-only
