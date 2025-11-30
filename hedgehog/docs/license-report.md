@@ -9,7 +9,7 @@ Bold-faced **`package-name`**s denote standard libraries bundled with `ghc-9.10.
 | Name | Version | [SPDX](https://spdx.org/licenses/) License Id | Description | Also depended upon by |
 | --- | --- | --- | --- | --- |
 | **`base`** | [`4.20.0.0`](http://hackage.haskell.org/package/base-4.20.0.0) | [`BSD-3-Clause`](http://hackage.haskell.org/package/base-4.20.0.0/src/LICENSE) | Core data structures and operations | *(core library)* |
-| `duoids` | [`0.0.1.0`](http://hackage.haskell.org/package/duoids-0.0.1.0) |  *MISSING* | *MISSING* |  |
+| `duoids` | [`0.0.1.0`](http://hackage.haskell.org/package/duoids-0.0.1.0) | [`(AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR AGPL-3.0-only OR LicenseRef-commercial) AND BSD-3-Clause`](http://hackage.haskell.org/package/duoids-0.0.1.0/src/LICENSE) | Unifying parallel and sequential operations |  |
 | `hedgehog` | [`1.7`](http://hackage.haskell.org/package/hedgehog-1.7) | [`BSD-3-Clause`](http://hackage.haskell.org/package/hedgehog-1.7/src/LICENSE) | Release with confidence. |  |
 | `no-recursion` | [`0.3.0.0`](http://hackage.haskell.org/package/no-recursion-0.3.0.0) | [`(AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR AGPL-3.0-only OR LicenseRef-commercial)`](http://hackage.haskell.org/package/no-recursion-0.3.0.0/src/LICENSE) | A GHC plugin to remove support for recursion | `duoids` |
 
