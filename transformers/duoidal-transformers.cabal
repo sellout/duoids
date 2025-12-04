@@ -37,17 +37,6 @@ source-repository head
   location: https://github.com/sellout/duoids.git
   subdir: transformers
 
-flag noisy-deprecations
-  description:
-    Prior to GHC 9.10, the @DEPRECATED@ pragma can’t distinguish between terms
-    and types. Consenquently, you can get spurious warnings when there’s a name
-    collision and the name in the other namespace is deprecated. Or you can
-    choose to not get those warnings, at the risk of not being warned when
-    there’s a name collision and the namespace you’re referencing is the one
-    that’s deprecated.
-  default: True
-  manual: False
-
 custom-setup
   setup-depends:
     -- TODO: Due to haskell/cabal#3751, `Cabal` has to be specified even though
@@ -58,7 +47,26 @@ custom-setup
     Cabal >= 3.0 && < 99,
     base ^>= {4.18.0, 4.19.0, 4.20.0, 4.21.0},
     cabal-doctest ^>= {1.0.0},
-    no-recursion ^>= {0.2.0, 0.3.0},
+
+flag noisy-deprecations
+  description:
+    Prior to GHC 9.10, the @DEPRECATED@ pragma can’t distinguish between terms
+    and types. Consenquently, you can get spurious warnings when there’s a name
+    collision and the name in the other namespace is deprecated. Or you can
+    choose to not get those warnings, at the risk of not being warned when
+    there’s a name collision and the namespace you’re referencing is the one
+    that’s deprecated.
+  default: True
+  -- Because disabling this flag won’t help the solver.
+  manual: True
+
+flag verify-no-recursion
+  description:
+    By default, this will enable @NoRecursion@ during compilation. However, if
+    the solver can’t find a solution with @NoRecursion@, it will automatically
+    disable it.
+  default: True
+  manual: False
 
 -- This mimics the GHC2024 extension
 -- (https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/control.html?highlight=doandifthenelse#extension-GHC2024),
@@ -83,7 +91,6 @@ common defaults
   import: GHC2024
   build-depends:
     base ^>= {4.18.0, 4.19.0, 4.20.0, 4.21.0},
-    no-recursion ^>= {0.2.0, 0.3.0},
   ghc-options:
     -Weverything
     -- This one just reports unfixable things, AFAICT.
@@ -93,7 +100,6 @@ common defaults
     -- Warns even when `Unsafe` is explicit, not inferred. See
     -- https://gitlab.haskell.org/ghc/ghc/-/issues/16689
     -Wno-unsafe
-    -fplugin=NoRecursion
   if impl(ghc >= 9.8.1)
     ghc-options:
       -- Inference good.
@@ -120,7 +126,13 @@ common defaults
     NoStarIsType
     NoTypeApplications
   if flag(noisy-deprecations)
-    cpp-options: -DSELLOUT_NOISY_DEPRECATIONS
+    cpp-options:
+      -DSELLOUT_NOISY_DEPRECATIONS
+  if flag(verify-no-recursion)
+    build-depends:
+      no-recursion ^>= {0.2.0, 0.3.0},
+    ghc-options:
+      -fplugin=NoRecursion
 
 library
   import: defaults

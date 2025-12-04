@@ -17,6 +17,11 @@ constraints:
   -- 0.2 is the first version that allows @Safe@ disabling of no-recursion.
   no-recursion >= 0.2,
 
+flags:
+  -- Ensure development of this package always uses @NoRecursion@, even if it
+  -- causes the solver to fail.
+  +verify-no-recursion
+
 packages:
   ./core/duoids.cabal
   ./algebraic-graphs/algebraic-graph-duoids.cabal
