@@ -7,7 +7,6 @@
 -- Warns even when `Unsafe` is explicit, not inferred. See
 -- https://gitlab.haskell.org/ghc/ghc/-/issues/16689
 {-# OPTIONS_GHC -Wno-unsafe #-}
-{-# OPTIONS_GHC -fplugin=NoRecursion #-}
 
 module Main (main) where
 
