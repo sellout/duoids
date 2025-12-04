@@ -5,6 +5,11 @@ max-backjumps: -1
 minimize-conflict-set: true
 reorder-goals: true
 
+flags:
+  -- Ensure development of this project always uses @NoRecursion@, even if it
+  -- causes the solver to fail.
+  +verify-no-recursion
+
 program-options
   ghc-options:
     -Werror
@@ -16,11 +21,6 @@ constraints:
   algebraic-graphs >= 0.3,
   -- 0.2 is the first version that allows @Safe@ disabling of no-recursion.
   no-recursion >= 0.2,
-
-flags:
-  -- Ensure development of this package always uses @NoRecursion@, even if it
-  -- causes the solver to fail.
-  +verify-no-recursion
 
 packages:
   ./core/duoids.cabal

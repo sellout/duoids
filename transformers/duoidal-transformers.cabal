@@ -62,11 +62,11 @@ flag noisy-deprecations
 
 flag verify-no-recursion
   description:
-    By default, this will enable @NoRecursion@ during compilation. However, if
-    the solver can’t find a solution with @NoRecursion@, it will automatically
-    disable it.
-  default: True
-  manual: False
+    Compile with "NoRecursion" enabled. This is intended for developers of this
+    package.
+  default: False
+  -- Because disabling this flag won’t help the solver.
+  manual: True
 
 -- This mimics the GHC2024 extension
 -- (https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/control.html?highlight=doandifthenelse#extension-GHC2024),
