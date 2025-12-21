@@ -3,11 +3,11 @@
 [![Packaging status](https://repology.org/badge/tiny-repos/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
 [![latest packaged versions](https://repology.org/badge/latest-versions/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
 
-Unifying parallel and sequential operations
-
-Duoids relate a pair of monoids, where one can be seen as “parallel” and the other “sequential”.
+[Duoids](https://hackage.haskell.org/package/duoids) applied to the [algebraic-graphs](https://hackage.haskell.org/package/algebraic-graphs) package.
 
 ## usage
+
+There are `Duoid` instances for the various graph representations in `algebraic-graphs`. There are also some implementations of `Duoid` methods to make it easy to provide `Duoid` instances for _other_ `Graph` instances.
 
 ## versioning
 
