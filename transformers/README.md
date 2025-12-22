@@ -3,11 +3,11 @@
 [![Packaging status](https://repology.org/badge/tiny-repos/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
 [![latest packaged versions](https://repology.org/badge/latest-versions/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
 
-Unifying parallel and sequential operations
-
-Duoids relate a pair of monoids, where one can be seen as “parallel” and the other “sequential”.
+[Duoids](https://hackage.haskell.org/package/duoids) applied to the [transformers](https://hackage.haskell.org/package/transformers) package.
 
 ## usage
+
+There is a `DuoidalTrans` class that works very much like `MonadTrans`. There are also `Duoidal` instances for various transformers.
 
 ## versioning
 

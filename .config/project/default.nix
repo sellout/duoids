@@ -51,7 +51,10 @@
       ##       i686-linux again …
       programs.prettier.enable = lib.mkForce true;
     };
-    vale.enable = true;
+    vale = {
+      enable = true;
+      vocab.${config.project.name}.accept = ["duoid"];
+    };
   };
 
   ## CI

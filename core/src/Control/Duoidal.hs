@@ -141,16 +141,24 @@ module Control.Duoidal
 
     -- * instance helpers
     normalPure,
+    sequentialAp,
     sequentialBind,
     sequentialLiftA2,
     sequentialPure,
 
     -- * duoids from commutative `Monad`s
     Commutative (Commutative, getCommutative),
+    commutativeAp,
   )
 where
 
-import "base" Control.Applicative (Alternative, Applicative, empty, (<|>))
+import "base" Control.Applicative
+  ( Alternative,
+    Applicative,
+    Const (Const),
+    empty,
+    (<|>),
+  )
 import "base" Control.Applicative qualified as Base
   ( liftA2,
     liftA3,
@@ -163,7 +171,8 @@ import "base" Control.Applicative qualified as Base
 import "base" Control.Category ((.))
 import "base" Control.Monad (Monad)
 import "base" Control.Monad qualified as Base
-  ( forever,
+  ( ap,
+    forever,
     join,
     liftM2,
     return,
@@ -182,18 +191,25 @@ import "base" Data.Bitraversable qualified as Base
     bitraverse,
   )
 import "base" Data.Bool (Bool)
+import "base" Data.Complex (Complex)
 import "base" Data.Either (Either (Left, Right), either)
 import "base" Data.Eq (Eq)
 import "base" Data.Foldable (Foldable)
 import "base" Data.Foldable qualified as Base (for_, traverse_)
 import "base" Data.Function (const, ($))
 import "base" Data.Functor (Functor, fmap)
+import "base" Data.Functor.Identity (Identity)
 import "base" Data.Kind (Constraint, Type)
-import "base" Data.Monoid (Monoid, mempty)
-import "base" Data.Ord (Ord)
-import "base" Data.Semigroup (Semigroup, (<>))
+import "base" Data.Maybe (Maybe)
+import "base" Data.Monoid (Dual, Monoid, Sum, mempty)
+import "base" Data.Monoid qualified as Monoid
+import "base" Data.Ord (Down, Ord)
+import "base" Data.Proxy (Proxy)
+import "base" Data.Semigroup (Max, Min, Semigroup, (<>))
+import "base" Data.Semigroup qualified as Semigroup
 import "base" Data.Traversable (Traversable)
 import "base" Data.Traversable qualified as Base (for, traverse)
+import "base" Data.Tuple (Solo)
 import "base" GHC.TypeError (ErrorMessage (Text), TypeError)
 import "base" System.IO (IO)
 import "base" Text.Read (Read)
@@ -467,6 +483,11 @@ sequentialLiftA2 ::
   Sequential f b ->
   Sequential f c
 sequentialLiftA2 f (Sequential a) = Sequential . Base.liftA2 f a . getSequential
+{-# DEPRECATED sequentialLiftA2 "use ‘sequentialAp’ instead" #-}
+
+sequentialAp ::
+  (Monad f) => Sequential f (a -> b) -> Sequential f a -> Sequential f b
+sequentialAp (Sequential f) = Sequential . Base.ap f . getSequential
 
 sequentialBind ::
   (Monad f) => Sequential f a -> (a -> Sequential f b) -> Sequential f b
@@ -476,24 +497,328 @@ sequentialBind (Sequential a) f = Sequential $ a Base.>>= (getSequential . f)
 
 -- | Commutative `Monad`s form a duoid with themselves.
 --
---  __NB__: Don’t use this newtype on a non-commutative Monad.
+--   You can use this with @DerivingVia@ to create instances for your own
+--   commutative `Monad`s.
+--
+--   For existing types, instances for types in base should be available here,
+--   but those for other packages may not exist. For those that don’t, you can
+--
+-- 1. wrap the type in `Commutative` when you need the instance,
+-- 2. define orphan instances that look like the instances for `Commutative`, or
+-- 3. use the provided operations (like `commutativeAp`) directly.
+--
+--   Some examples of commutative monads:
+-- - those isomorphic to `Identity` (many newtypes fall into this bucket)
+-- - reader (@->@)
+-- - `Maybe`
+-- - `Proxy`
+--
+--   You can also wrap types that already have `Duoidal` instances in
+--   `Commutative` as well (as long as they have an unwrapped `Monad` instance).
+--   If their existing `Duoidal` instance isn’t the commutative one, the
+--   `Commutative` wrapper will give you the commutative one. I don’t know if
+--   this one is correct, but if you have a commutative writer (say, @`Writer`
+--   (`Set` `Char`)@), wrapping it in `Commutative` would give you a `Duoidal`
+--   instance that behaves commutatively. However, @`Set` a@ should already have
+--   a commutative `Duoid` instance, so I don’t think it actually buys you
+--   anything.
+--
+--  __NB__: Don’t use this newtype to turn a non-commutative `Monad` into a
+--          duoid.
 type Commutative :: forall {k}. (k -> Type) -> k -> Type
 newtype Commutative f a = Commutative {getCommutative :: f a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
-instance (Applicative f) => Applicative (Parallel (Commutative f)) where
-  pure = Parallel . Commutative . Base.pure
-  liftA2 f (Parallel (Commutative a)) (Parallel (Commutative b)) =
-    Parallel . Commutative $ Base.liftA2 f a b
+instance (Monad f) => Applicative (Commutative f) where
+  pure = Commutative . Base.return
+  Commutative f <*> Commutative a = Commutative $ Base.ap f a
 
-instance (Applicative f) => Applicative (Sequential (Commutative f)) where
-  pure = Sequential . Commutative . Base.pure
-  liftA2 f (Sequential (Commutative a)) (Sequential (Commutative b)) =
-    Sequential . Commutative $ Base.liftA2 f a b
+instance (Monad f) => Monad (Commutative f) where
+  Commutative a >>= f = Commutative $ a Base.>>= (getCommutative . f)
+
+commutativeAp ::
+  (Monad f) =>
+  Parallel f (a -> b) ->
+  Parallel f a ->
+  Parallel f b
+commutativeAp (Parallel f) = Parallel . Base.ap f . getParallel
+
+instance (Monad f) => Applicative (Parallel (Commutative f)) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance (Monad f) => Applicative (Sequential (Commutative f)) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
 
 instance (Monad f) => Monad (Sequential (Commutative f)) where
-  Sequential (Commutative a) >>= f =
-    Sequential . Commutative $ a Base.>>= (getCommutative . getSequential . f)
+  (>>=) = sequentialBind
+
+instance (Monad f) => Normal (Commutative f)
+
+-- `Complex` is a commutative duoidal functor
+
+instance Applicative (Parallel Complex) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Complex) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Complex) where
+  (>>=) = sequentialBind
+
+instance Normal Complex
+
+-- `Down` is a commutative duoidal functor
+
+instance Applicative (Parallel Down) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Down) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Down) where
+  (>>=) = sequentialBind
+
+instance Normal Down
+
+-- `Dual` is a commutative duoidal functor
+
+instance Applicative (Parallel Dual) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Dual) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Dual) where
+  (>>=) = sequentialBind
+
+instance Normal Dual
+
+-- `Monoid.First` is a commutative duoidal functor
+
+instance Applicative (Parallel Monoid.First) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Monoid.First) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Monoid.First) where
+  (>>=) = sequentialBind
+
+instance Normal Monoid.First
+
+-- `Semigroup.First` is a commutative duoidal functor
+
+instance Applicative (Parallel Semigroup.First) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Semigroup.First) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Semigroup.First) where
+  (>>=) = sequentialBind
+
+instance Normal Semigroup.First
+
+-- `Identity` is a commutative duoidal functor
+
+instance Applicative (Parallel Identity) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Identity) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Identity) where
+  (>>=) = sequentialBind
+
+instance Normal Identity
+
+-- `Monoid.Last` is a commutative duoidal functor
+
+instance Applicative (Parallel Monoid.Last) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Monoid.Last) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Monoid.Last) where
+  (>>=) = sequentialBind
+
+instance Normal Monoid.Last
+
+-- `Semigroup.Last` is a commutative duoidal functor
+
+instance Applicative (Parallel Semigroup.Last) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Semigroup.Last) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Semigroup.Last) where
+  (>>=) = sequentialBind
+
+instance Normal Semigroup.Last
+
+-- `Max` is a commutative duoidal functor
+
+instance Applicative (Parallel Max) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Max) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Max) where
+  (>>=) = sequentialBind
+
+instance Normal Max
+
+-- `Maybe` is a commutative duoidal functor
+
+instance Applicative (Parallel Maybe) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Maybe) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Maybe) where
+  (>>=) = sequentialBind
+
+instance Normal Maybe
+
+-- `Min` is a commutative duoidal functor
+
+instance Applicative (Parallel Min) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Min) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Min) where
+  (>>=) = sequentialBind
+
+instance Normal Min
+
+-- `Monoid.Product` is a commutative duoidal functor
+
+instance Applicative (Parallel Monoid.Product) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Monoid.Product) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Monoid.Product) where
+  (>>=) = sequentialBind
+
+instance Normal Monoid.Product
+
+-- `Proxy` is a commutative duoidal functor
+
+instance Applicative (Parallel Proxy) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Proxy) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Proxy) where
+  (>>=) = sequentialBind
+
+instance Normal Proxy
+
+-- `Solo` is a commutative duoidal functor
+
+instance Applicative (Parallel Solo) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Solo) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Solo) where
+  (>>=) = sequentialBind
+
+instance Normal Solo
+
+-- `Sum` is a commutative duoidal functor
+
+instance Applicative (Parallel Sum) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential Sum) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential Sum) where
+  (>>=) = sequentialBind
+
+instance Normal Sum
+
+-- reader is a commutative duoidal functor
+
+instance Applicative (Parallel ((->) r)) where
+  pure = normalPure
+  (<*>) = commutativeAp
+
+instance Applicative (Sequential ((->) r)) where
+  pure = sequentialPure
+  (<*>) = sequentialAp
+
+instance Monad (Sequential ((->) r)) where
+  (>>=) = sequentialBind
+
+instance Normal ((->) r)
+
+-- Const
+
+instance (Monoid a) => Applicative (Parallel (Const a)) where
+  pure = normalPure
+  liftA2 f (Parallel a) (Parallel b) = Parallel $ liftA2 f a b
+
+instance (Monoid a) => Applicative (Sequential (Const a)) where
+  pure = Sequential . pure
+  liftA2 f (Sequential a) = Sequential . Base.liftA2 f a . getSequential
+
+-- | The `Const` duoidal functor provides an illustration of why we need to have
+--   both `Parallel` and `Sequential` newtypes – relying on the underlying
+--   `Applicative` (and only having the `Sequential` newtype) would mean that
+--   any duoidal structure would only have a `Monad` available under
+--   `Sequential`, which would be a prettty serious impact. On the other hand,
+--   relying on the underlying `Monad` (and only having the `Parallel` newtype)
+--   is much more natural, but `Const`, for example, having a `Monad` instance
+--   would make it basically useless, and the more interesting `Applicative`
+--   instance would only be available under the `Parallel` netwype. The current
+--   structure allows either the `Applicative` or `Monad` instance to be the one
+--   exposed directly.
+instance (Monoid a) => Monad (Sequential (Const a)) where
+  Sequential (Const a) >>= _ = Sequential $ Const a
 
 -- Either
 
@@ -509,7 +834,7 @@ instance (Semigroup e) => Applicative (Parallel (Either e)) where
 
 instance (Semigroup e) => Applicative (Sequential (Either e)) where
   pure = sequentialPure
-  liftA2 = sequentialLiftA2
+  (<*>) = sequentialAp
 
 instance (Semigroup e) => Monad (Sequential (Either e)) where
   (>>=) = sequentialBind
@@ -539,7 +864,7 @@ instance Applicative (Parallel IO) where
 
 instance Applicative (Sequential IO) where
   pure = sequentialPure
-  liftA2 = sequentialLiftA2
+  (<*>) = sequentialAp
 
 instance Monad (Sequential IO) where
   (>>=) = sequentialBind
@@ -584,3 +909,46 @@ instance (Duoid a) => Monad (Sequential ((,) a)) where
 -- | A writer is a `Normal` `Duoidal` functor when the writee is a
 --   `Duoid.Normal` `Duoid`.
 instance (Duoid.Normal a) => Normal ((,) a)
+
+instance (Duoid a, Duoid b) => Applicative (Parallel ((,,) a b)) where
+  pure = Parallel . (pempty,pempty,)
+  liftA2 f (Parallel (a, b, x)) (Parallel (a', b', y)) =
+    Parallel (a |-| a', b |-| b', f x y)
+
+instance (Duoid a, Duoid b) => Applicative (Sequential ((,,) a b)) where
+  pure = Sequential . (sempty,sempty,)
+  liftA2 = Base.liftM2
+
+instance (Duoid a, Duoid b) => Monad (Sequential ((,,) a b)) where
+  Sequential (u, v, a) >>= k =
+    case k a of Sequential (u', v', b) -> Sequential (u >-> u', v >-> v', b)
+
+-- | A writer is a `Normal` `Duoidal` functor when the writee is a
+--   `Duoid.Normal` `Duoid`.
+instance (Duoid.Normal a, Duoid.Normal b) => Normal ((,,) a b)
+
+instance
+  (Duoid a, Duoid b, Duoid c) =>
+  Applicative (Parallel ((,,,) a b c))
+  where
+  pure = Parallel . (pempty,pempty,pempty,)
+  liftA2 f (Parallel (a, b, c, x)) (Parallel (a', b', c', y)) =
+    Parallel (a |-| a', b |-| b', c |-| c', f x y)
+
+instance
+  (Duoid a, Duoid b, Duoid c) =>
+  Applicative (Sequential ((,,,) a b c))
+  where
+  pure = Sequential . (sempty,sempty,sempty,)
+  liftA2 = Base.liftM2
+
+instance (Duoid a, Duoid b, Duoid c) => Monad (Sequential ((,,,) a b c)) where
+  Sequential (u, v, w, a) >>= k =
+    case k a of
+      Sequential (u', v', w', b) -> Sequential (u >-> u', v >-> v', w >-> w', b)
+
+-- | A writer is a `Normal` `Duoidal` functor when the writee is a
+--   `Duoid.Normal` `Duoid`.
+instance
+  (Duoid.Normal a, Duoid.Normal b, Duoid.Normal c) =>
+  Normal ((,,,) a b c)

@@ -5,6 +5,7 @@ garnix
 [Nn]ix
 Pfeil
 ShellCheck
+duoid
 API
 bugfix
 comonad

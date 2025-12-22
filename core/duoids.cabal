@@ -137,7 +137,8 @@ common defaults
 
 library
   import: defaults
-  hs-source-dirs: src
+  hs-source-dirs:
+    src
   exposed-modules:
     Control.Duoidal
     Control.Duoidal.Either

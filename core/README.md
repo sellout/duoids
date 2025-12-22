@@ -107,11 +107,15 @@ The `async` package has a `Concurrently` newtype over `IO` that’s the same as 
 
 ### [either](https://hackage.haskell.org/package/either)
 
-The `either` package has a `Validation` type that’s isomorphic to `Either` and has an applicative instance that’s the same as the `Parallel (Either e)` instance here. However, it doesn’t have anything like the `Duoidal` class, and so requires manual conversion back and forth between `Either` and `Validation`.
+The `either` package has a `Validation` type that’s isomorphic to `Either` and has an `Applicative` instance that’s the same as the `Parallel (Either e)` instance here. However, it doesn’t have anything like the `Duoidal` class, and so requires manual conversion back and forth between `Either` and `Validation`.
 
 ### [Haskerwaul](https://github.com/sellout/haskerwaul#readme)
 
 A broader package that contains a more general (category polymorphic) implementation of duoids. It’s also much less pragmatic.
+
+### [multi-except](https://hackage.haskell.org/package/multi-except)
+
+This seems like another approach to `Validation`, but I haven’t used it.
 
 ### [United Monoids](https://github.com/snowleopard/united)
 
