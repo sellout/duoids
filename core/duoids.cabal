@@ -137,14 +137,18 @@ common defaults
 
 library
   import: defaults
+  build-depends:
+    newtype
   hs-source-dirs:
     src
   exposed-modules:
     Control.Duoidal
     Control.Duoidal.Either
     Control.Duoidal.Laws
+    Control.Monad.Commutative
     Data.Duoid
     Data.Duoid.Laws
+    Data.Monoid.Commutative
   other-modules:
     Control.Duoidal.Async
 

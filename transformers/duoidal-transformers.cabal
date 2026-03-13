@@ -138,11 +138,13 @@ library
   import: defaults
   hs-source-dirs: src
   build-depends:
+    barbies,
     duoids ^>= {0.0.1},
+    newtype,
     transformers ^>= {0.6.1},
   exposed-modules:
     Control.Duoidal.Trans.Class
-    Control.Duoidal.Trans.Orphans
+    Control.Monad.Trans.Commutative
 
 test-suite doctests
   import: defaults

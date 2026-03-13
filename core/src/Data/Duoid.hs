@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-methods:sconcat #-}
 
@@ -18,34 +18,39 @@ module Data.Duoid
     sempty,
     (|-|),
     (>->),
-    Comm (Comm),
+    pfold,
+    sfold,
+    pfoldMap,
+    sfoldMap,
   )
 where
 
-import "base" Control.Applicative (liftA2)
-import "base" Control.Category ((.))
-import "base" Data.Eq (Eq, (==))
-import "base" Data.Foldable (Foldable)
-import "base" Data.Function (const, ($))
-import "base" Data.Functor (Functor)
-import "base" Data.Kind (Constraint, Type)
-import "base" Data.Monoid (Monoid, mempty)
-import "base" Data.Ord (Ord, max, (<), (<=), (>))
-import "base" Data.Ratio (Ratio, Rational, (%))
-import "base" Data.Semigroup
+import safe "base" Control.Applicative (liftA2)
+import safe "base" Control.Category ((.))
+import safe "base" Data.Eq (Eq, (==))
+import safe "base" Data.Foldable (Foldable, foldMap)
+import safe "base" Data.Function (const, ($))
+import safe "base" Data.Functor (Functor)
+import safe "base" Data.Kind (Constraint, Type)
+import safe "base" Data.Monoid (Monoid, mempty)
+import safe "base" Data.Ord (Ord, max, (<), (<=), (>))
+import safe "base" Data.Ratio (Ratio, Rational, (%))
+import safe "base" Data.Semigroup
   ( Semigroup,
     stimes,
     stimesIdempotentMonoid,
     stimesMonoid,
     (<>),
   )
-import "base" Data.Traversable (Traversable)
-import "base" Data.Word (Word, Word16, Word32, Word64, Word8)
-import "base" GHC.Real (infinity)
-import "base" Numeric.Natural (Natural)
-import "base" Text.Read (Read)
-import "base" Text.Show (Show)
-import "base" Prelude (Bounded, Integral, maxBound, minBound, (+))
+import safe "base" Data.Traversable (Traversable)
+import safe "base" Data.Word (Word, Word16, Word32, Word64, Word8)
+import safe "base" GHC.Real (infinity)
+import safe "base" Numeric.Natural (Natural)
+import safe "base" Text.Read (Read)
+import safe "base" Text.Show (Show)
+import "newtype" Control.Newtype (Newtype, ala, ala', op, under)
+import safe "this" Data.Monoid.Commutative (Comm (Comm))
+import safe "base" Prelude (Bounded, Integral, maxBound, minBound, (+))
 
 -- | A wrapper to allow specifying a `Monoid` for the parallel (♢) component of
 --   a `Duoid`.
@@ -53,11 +58,15 @@ type Par :: Type -> Type
 newtype Par a = Par {getPar :: a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
+instance Newtype (Par a) a
+
 -- | A wrapper to allow specifying a `Monoid` for the sequential (★) component
 --   of a `Duoid`.
 type Seq :: Type -> Type
 newtype Seq a = Seq {getSeq :: a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
+
+instance Newtype (Seq a) a
 
 -- | Instances for `Duoid` are automatically coalesced from the respective
 --   @`Monoid` `.` `Par`@ and @`Monoid` `.` `Seq`@ instances.
@@ -75,26 +84,38 @@ class (Duoid a) => Normal a
 
 -- | The parallel unit of a `Duoid`
 pempty :: (Duoid a) => a
-pempty = getPar mempty
+pempty = op Par mempty
 
 -- | The sequential unit of a `Duoid`.
 sempty :: (Duoid a) => a
-sempty = getSeq mempty
+sempty = op Seq mempty
 
 -- | The parallel operation of a `Duoid`.
 (|-|) :: (Duoid a) => a -> a -> a
-x |-| y = getPar (Par x <> Par y)
+(|-|) x = under Par (Par x <>)
 
 -- | The sequential operation of a `Duoid`.
-(>->) :: (Duoid a) => a -> a -> a
-x >-> y = getSeq (Seq x <> Seq y)
-
--- | A commutative `Monoid` forms a `Duoid` with itself.
 --
---  __NB__: Be careful not to wrap a non-commutative `Monoid` with this newtype.
-type Comm :: Type -> Type
-newtype Comm a = Comm a
-  deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
+--  __NB__: The visual of the operator is slightly misleading. It’s intended to
+--          indicate sequentiality, but in this category, it’s not quite like in
+--          the case of endofunctors. For example, with algebraic graphs, the
+--          parallel operation is `overlay`, and the sequential operation is
+--          `connect`, but for an undirected graph, `connect` is still
+--          commutative, so @x `>->` y@ and @y `>->` x@ are equivalent.
+(>->) :: (Duoid a) => a -> a -> a
+(>->) x = under Seq (Seq x <>)
+
+pfold :: (Foldable t, Duoid a) => t a -> a
+pfold = ala Par foldMap
+
+sfold :: (Foldable t, Duoid a) => t a -> a
+sfold = ala Seq foldMap
+
+pfoldMap :: (Foldable t, Duoid d) => (a -> d) -> t a -> d
+pfoldMap = ala' Par foldMap
+
+sfoldMap :: (Foldable t, Duoid d) => (a -> d) -> t a -> d
+sfoldMap = ala' Seq foldMap
 
 instance (Monoid a) => Semigroup (Par (Comm a)) where
   Par (Comm x) <> Par (Comm y) = Par . Comm $ x <> y
