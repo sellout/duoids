@@ -3,12 +3,11 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 --
 -- Commutative `Monad`s.
 module Control.Monad.Commutative
   ( Commutative (Commutative),
-    getCommutative,
   )
 where
 
@@ -68,8 +67,10 @@ import safe "base" Prelude
 --
 --  __NB__: Don’t use this newtype to turn a non-commutative `Monad` into a
 --          duoid.
+--
+-- @since 999999999
 type Commutative :: forall {k}. (k -> Type) -> k -> Type
-newtype Commutative f a = Commutative {getCommutative :: f a}
+newtype Commutative f a = Commutative (f a)
   deriving stock (Eq, Generic, Ord, Read, Show)
   deriving stock (Foldable, Functor, Generic1, Traversable)
   deriving newtype
@@ -86,5 +87,7 @@ newtype Commutative f a = Commutative {getCommutative :: f a}
       Semigroup
     )
   deriving newtype (Alternative, Applicative, Monad, MonadPlus)
+
+type role Commutative representational nominal
 
 instance Newtype (Commutative f a) (f a)

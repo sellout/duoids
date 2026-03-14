@@ -3,7 +3,7 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Test.Duoidal
   ( validate,
   -- validateNormal,
@@ -81,6 +81,9 @@ nonNormalProperties i spu ju swu genF =
         )
       ]
 
+-- | Check all properties against a `Duoidal` instance.
+--
+-- @since 0.0.1
 validate ::
   forall f.
   (Duoidal f, Eq1 f, Show1 f, Typeable f) =>

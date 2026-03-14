@@ -1,11 +1,12 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# OPTIONS_GHC -fplugin-opt=NoRecursion:ignore-methods:many,some #-}
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 --
 -- Provides duoidal operations on functors. This lets us easily mix and match
 -- "parallel" and "sequential" operations on structures that have multiple
@@ -226,6 +227,9 @@ import safe "this" Data.Duoid (Duoid, pempty, sempty, (>->), (|-|))
 import safe "this" Data.Duoid qualified as Duoid (Normal)
 import safe "base" Prelude (error)
 
+-- I don’t know why this isn’t handled by the `ignore` in hlint.nix.
+{-# HLINT ignore "Use traverse_" #-}
+
 -- $setup
 -- >>> :seti -XApplicativeDo
 -- >>> :seti -XQualifiedDo
@@ -234,6 +238,8 @@ import safe "base" Prelude (error)
 type Parallel :: forall {k}. (k -> Type) -> k -> Type
 newtype Parallel f a = Parallel {getParallel :: f a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
+
+type role Parallel representational nominal
 
 instance Newtype (Parallel f a) (f a)
 
@@ -251,6 +257,8 @@ instance
 type Sequential :: forall {k}. (k -> Type) -> k -> Type
 newtype Sequential f a = Sequential {getSequential :: f a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
+
+type role Sequential representational nominal
 
 instance Newtype (Sequential f a) (f a)
 

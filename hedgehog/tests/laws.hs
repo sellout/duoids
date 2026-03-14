@@ -3,7 +3,7 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Main (main) where
 
 import safe "base" Control.Applicative (liftA2)
@@ -60,10 +60,12 @@ _genRealFrac =
     . Range.linear 1
     $ maxBound @a
 
--- |
+-- | Entry point for the law tests.
 --
 --  __FIXME__: For some reason, the `Ratio` cases generate (or shrink to) “Ratio
 --             has zero denominator”.
+--
+-- @since 0.0.1
 main :: IO ()
 main =
   Hedgehog.defaultMain $

@@ -4,10 +4,9 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Control.Monad.Trans.Commutative
   ( CommutativeT (CommutativeT),
-    getCommutativeT,
     lift,
     lower,
   )
@@ -43,8 +42,8 @@ import safe "base" Text.Read (Read)
 import safe "base" Text.Show (Show)
 import safe "duoids" Control.Duoidal (DuoidalIO, Parallel, Sequential)
 import safe "duoids" Control.Duoidal qualified as Duoidal
-import safe "duoids" Control.Monad.Commutative (Commutative (Commutative), getCommutative)
-import "newtype" Control.Newtype (Newtype, over)
+import safe "duoids" Control.Monad.Commutative (Commutative (Commutative))
+import "newtype" Control.Newtype (Newtype, op, over)
 import safe "transformers" Control.Monad.Trans.Class (MonadTrans)
 import safe "base" Prelude
   ( Bounded,
@@ -70,9 +69,11 @@ import safe "base" Prelude
 --   (although `MaybeT` already has the same `Duoidal` instance, so it’s not
 --   necessary in that case). However, @`Commutative` (`MaybeT` `IO`)@ is /not/
 --   valid, because that would require that `IO` be commutative, which it isn’t.
+--
+-- @since 999999999
 type CommutativeT ::
   forall {k}. ((k -> Type) -> k -> Type) -> (k -> Type) -> k -> Type
-newtype CommutativeT t m a = CommutativeT {getCommutativeT :: t m a}
+newtype CommutativeT t m a = CommutativeT (t m a)
   deriving stock (Eq, Generic, Ord, Read, Show)
   deriving stock (Foldable, Functor, Generic1, Traversable)
   deriving newtype
@@ -90,6 +91,8 @@ newtype CommutativeT t m a = CommutativeT {getCommutativeT :: t m a}
     )
   deriving newtype (Alternative, Applicative, Monad, MonadPlus)
   deriving newtype (ApplicativeT, ConstraintsT, FunctorT, MonadTrans)
+
+type role CommutativeT representational nominal nominal
 
 deriving via
   (Parallel (t (m :: Type -> Type) :: Type -> Type))
@@ -116,19 +119,27 @@ deriving newtype instance
   Duoidal.Normal (CommutativeT t m)
 
 instance (DistributiveT t) => DistributiveT (CommutativeT t) where
-  tdistribute = CommutativeT . tdistribute . fmap getCommutativeT
+  tdistribute = CommutativeT . tdistribute . fmap (op CommutativeT)
 
 instance (MonadT t) => MonadT (CommutativeT t) where
   tlift = CommutativeT . tlift
-  tembed f = over CommutativeT $ tembed (getCommutativeT . f)
+  tembed f = over CommutativeT $ tembed (op CommutativeT . f)
 
 instance (TraversableT t) => TraversableT (CommutativeT t) where
-  ttraverse f = fmap CommutativeT . ttraverse f . getCommutativeT
+  ttraverse f = fmap CommutativeT . ttraverse f . op CommutativeT
 
 instance Newtype (CommutativeT t m a) (t m a)
 
+-- | Lift a `CommutativeT` over a `Commutative` `Monad` to a `Commutative`
+--   `Monad` stack.
+--
+-- @since 999999999
 lift :: (FunctorT t) => CommutativeT t (Commutative m) a -> Commutative (t m) a
-lift (CommutativeT tcma) = Commutative $ tmap getCommutative tcma
+lift (CommutativeT tcma) = Commutative $ tmap (op Commutative) tcma
 
+-- | Lower a `Commutative` `Monad` stack to a `CommutativeT` over a
+--   `Commutative` `Monad`.
+--
+-- @since 999999999
 lower :: (FunctorT t) => Commutative (t m) a -> CommutativeT t (Commutative m) a
 lower (Commutative tma) = CommutativeT $ tmap Commutative tma

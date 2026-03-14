@@ -4,7 +4,7 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 --
 -- ## resources
 --
@@ -54,22 +54,32 @@ import safe "base" Prelude (Bounded, Integral, maxBound, minBound, (+))
 
 -- | A wrapper to allow specifying a `Monoid` for the parallel (♢) component of
 --   a `Duoid`.
+--
+-- @since 0.0.1
 type Par :: Type -> Type
 newtype Par a = Par {getPar :: a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
+
+type role Par representational
 
 instance Newtype (Par a) a
 
 -- | A wrapper to allow specifying a `Monoid` for the sequential (★) component
 --   of a `Duoid`.
+--
+-- @since 0.0.1
 type Seq :: Type -> Type
 newtype Seq a = Seq {getSeq :: a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
+
+type role Seq representational
 
 instance Newtype (Seq a) a
 
 -- | Instances for `Duoid` are automatically coalesced from the respective
 --   @`Monoid` `.` `Par`@ and @`Monoid` `.` `Seq`@ instances.
+--
+-- @since 0.0.1
 type Duoid :: Type -> Constraint
 class (Monoid (Par a), Monoid (Seq a)) => Duoid a
 
@@ -79,18 +89,26 @@ instance {-# OVERLAPPABLE #-} (Monoid (Par a), Monoid (Seq a)) => Duoid a
 
 -- | A duoid where there is a natural transformation between the parallel and
 --   sequential units. In this category, that is when the units are identical.
+--
+-- @since 0.0.1
 type Normal :: Type -> Constraint
 class (Duoid a) => Normal a
 
 -- | The parallel unit of a `Duoid`
+--
+-- @since 0.0.1
 pempty :: (Duoid a) => a
 pempty = op Par mempty
 
 -- | The sequential unit of a `Duoid`.
+--
+-- @since 0.0.1
 sempty :: (Duoid a) => a
 sempty = op Seq mempty
 
 -- | The parallel operation of a `Duoid`.
+--
+-- @since 0.0.1
 (|-|) :: (Duoid a) => a -> a -> a
 (|-|) x = under Par (Par x <>)
 
@@ -102,18 +120,32 @@ sempty = op Seq mempty
 --          parallel operation is `overlay`, and the sequential operation is
 --          `connect`, but for an undirected graph, `connect` is still
 --          commutative, so @x `>->` y@ and @y `>->` x@ are equivalent.
+--
+-- @since 0.0.1
 (>->) :: (Duoid a) => a -> a -> a
 (>->) x = under Seq (Seq x <>)
 
+-- | The parallel `fold` of a `Duoid`.
+--
+-- @since 999999999
 pfold :: (Foldable t, Duoid a) => t a -> a
 pfold = ala Par foldMap
 
+-- | The sequential `fold` of a `Duoid`.
+--
+-- @since 999999999
 sfold :: (Foldable t, Duoid a) => t a -> a
 sfold = ala Seq foldMap
 
+-- | The parallel `foldMap` of a `Duoid`.
+--
+-- @since 999999999
 pfoldMap :: (Foldable t, Duoid d) => (a -> d) -> t a -> d
 pfoldMap = ala' Par foldMap
 
+-- | The sequential `foldMap` of a `Duoid`.
+--
+-- @since 999999999
 sfoldMap :: (Foldable t, Duoid d) => (a -> d) -> t a -> d
 sfoldMap = ala' Seq foldMap
 

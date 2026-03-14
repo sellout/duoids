@@ -1,6 +1,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE Trustworthy #-}
 
+-- |
+-- Copyright: 2024 Greg Pfeil
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Data.Monoid.Commutative
   ( Comm (Comm),
   )
@@ -33,6 +36,8 @@ import safe "base" Prelude
 -- | A commutative `Monoid` forms a `Duoid` with itself.
 --
 --  __NB__: Be careful not to wrap a non-commutative `Monoid` with this newtype.
+--
+-- @since 999999999
 type Comm :: Type -> Type
 newtype Comm a = Comm a
   deriving stock (Eq, Generic, Ord, Read, Show)
@@ -50,5 +55,7 @@ newtype Comm a = Comm a
       RealFrac,
       Semigroup
     )
+
+type role Comm representational
 
 instance Newtype (Comm a) a

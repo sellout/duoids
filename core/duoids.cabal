@@ -1,22 +1,23 @@
 cabal-version: 3.0
+-- ^ Cabal 3.0 is the first with the `Universal-FOSS-exception-1.0` SPDX license
+--   exception.
 
 name: duoids
 version: 0.0.1.0
 synopsis: Unifying parallel and sequential operations
-description: Duoids relate a pair of monoids, where one can be seen as
-            “parallel” and the other “sequential”.
+description:
+  Duoids relate a pair of monoids, where one can be seen as “parallel” and the
+  other “sequential”.
 maintainer: Greg Pfeil <greg@technomadic.org>
 author: Greg Pfeil <greg@technomadic.org>
 copyright: 2024 Greg Pfeil
--- TODO: Remove the redundant `OR AGPL-3.0-only` once
---       haskell/hackage-server#1440 is fixed.
-license: (AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR AGPL-3.0-only OR LicenseRef-commercial) AND BSD-3-Clause
+license: (AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary) AND BSD-3-Clause
 license-files:
   LICENSE
   LICENSE.AGPL-3.0-only
   LICENSE.BSD-3-Clause
   LICENSE.Universal-FOSS-exception-1.0
-  LICENSE.commercial
+  LICENSE.proprietary
 category: Algebra, Error Handling
 build-type: Custom
 extra-doc-files:
@@ -25,28 +26,42 @@ extra-doc-files:
   docs/*.md
 tested-with:
   GHC == {
-    9.6.1, 9.6.3,
+    9.6.1, 9.6.7,
     9.8.1, 9.8.4,
-    9.10.1,
-    9.12.1
+    9.10.1, 9.10.2, 9.10.3,
+    9.12.1, 9.12.2,
+    9.14.1
   }
 
 homepage: https://github.com/sellout/duoids#readme
 bug-reports: https://github.com/sellout/duoids/issues
+
 source-repository head
   type: git
   location: https://github.com/sellout/duoids.git
   subdir: core
 
+source-repository this
+  type: git
+  location: https://github.com/sellout/duoids.git
+  subdir: core
+  -- NB: This is the repo version, which is distinct from the package version.
+  tag: v0.1.0
+
 custom-setup
   setup-depends:
     -- TODO: Due to haskell/cabal#3751, `Cabal` has to be specified even though
-    --       there’s no direct dependency. Its lower bound needs to match
-    --      `cabal-version` at the top of this file, and Hackage requires it to
-    --       have _some_ upper bound. (Since there’s no direct dependency, it
-    --       doesn’t use PVP bounds.)
-    Cabal >= 3.0 && < 99,
-    base ^>= {4.18.0, 4.19.0, 4.20.0, 4.21.0},
+    --       there’s no direct dependency. Its lower bound needs to be at least
+    --       as high as `cabal-version` at the top of this file, and Hackage
+    --       requires it to have _some_ upper bound. (Since there’s no direct
+    --       dependency, it doesn’t use PVP bounds.)
+    --
+    -- TODO: Due to haskell/cabal#9375, 3.10.3 is required in order to load
+    --       plugins from a `ghc-options` field. Unfortunately, GHCs prior to
+    --       9.8.3 include an older Cabal, so a newer one may need to be
+    --       manually installed.
+    Cabal >= 3.10.3 && < 99,
+    base ^>= {4.18.0, 4.19.0, 4.20.0, 4.21.0, 4.22.0},
     cabal-doctest ^>= {1.0.0},
 
 flag noisy-deprecations
@@ -61,9 +76,9 @@ flag noisy-deprecations
   -- Because disabling this flag won’t help the solver.
   manual: True
 
-flag verify-no-recursion
+flag lint
   description:
-    Compile with "NoRecursion" enabled. This is intended for developers of this
+    Build with linting plugins enabled. This is intended for developers of this
     package.
   default: False
   -- Because disabling this flag won’t help the solver.
@@ -71,7 +86,7 @@ flag verify-no-recursion
 
 -- This mimics the GHC2024 extension
 -- (https://ghc.gitlab.haskell.org/ghc/doc/users_guide/exts/control.html?highlight=doandifthenelse#extension-GHC2024),
--- but supporting compilers back to GHC 8.0. If the oldest supported compiler
+-- but supporting compilers back to GHC 7.10. If the oldest supported compiler
 -- is GHC 9.10, then this stanza can be removed and `import: GHC2024` can be
 -- replaced by `default-language: GHC2024`. If the oldest supported compiler is
 -- GHC 9.2, then this can be simplified by setting `default-language: GHC2021`
@@ -91,7 +106,8 @@ common GHC2024
 common defaults
   import: GHC2024
   build-depends:
-    base ^>= {4.18.0, 4.19.0, 4.20.0, 4.21.0},
+    base ^>= {4.18.0, 4.19.0, 4.20.0, 4.21.0, 4.22.0},
+    ghc-compat-plugin ^>= {0.1.0},
   ghc-options:
     -Weverything
     -- This one just reports unfixable things, AFAICT.
@@ -101,10 +117,9 @@ common defaults
     -- Warns even when `Unsafe` is explicit, not inferred. See
     -- https://gitlab.haskell.org/ghc/ghc/-/issues/16689
     -Wno-unsafe
-  if impl(ghc >= 9.8.1)
-    ghc-options:
-      -- Inference good.
-      -Wno-missing-role-annotations
+    -fplugin GhcCompat
+    -fplugin-opt GhcCompat:minVersion=9.6.1
+    -fplugin-opt GhcCompat:reportIncompatibleExtensions=error
   default-extensions:
     BlockArguments
     DefaultSignatures
@@ -129,16 +144,18 @@ common defaults
   if flag(noisy-deprecations)
     cpp-options:
       -DSELLOUT_NOISY_DEPRECATIONS
-  if flag(verify-no-recursion)
+  if flag(lint)
     build-depends:
+      henforcer ^>= {1.0.0},
       no-recursion ^>= {0.2.0, 0.3.0},
     ghc-options:
-      -fplugin=NoRecursion
+      -fplugin Henforcer
+      -fplugin NoRecursion
 
 library
   import: defaults
   build-depends:
-    newtype
+    newtype ^>= {0.1, 0.2},
   hs-source-dirs:
     src
   exposed-modules:
@@ -155,11 +172,16 @@ library
 test-suite doctests
   import: defaults
   type: exitcode-stdio-1.0
-  hs-source-dirs: tests
+  hs-source-dirs:
+    tests
   main-is: doctests.hs
   build-depends:
     doctest ^>= {0.21.1, 0.22.6, 0.24.0},
     duoids,
+  -- NB: Adjust this to contain any components that may have doctests (including
+  --     executables).
+  x-doctest-components:
+    lib
   -- TODO: The sections below here are necessary because we don’t have control
   --       over the generated `Build_doctests.hs` file. So we have to silence
   --       all of its warnings one way or another.

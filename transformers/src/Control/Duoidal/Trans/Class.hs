@@ -5,7 +5,7 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Control.Duoidal.Trans.Class
   ( DuoidalTrans (lift),
     NormalTrans,
@@ -67,10 +67,16 @@ import safe "transformers" Control.Monad.Trans.Writer
   )
 import safe "this" Control.Monad.Trans.Commutative (CommutativeT (CommutativeT))
 
+-- | A duoid in the category of monad transformers.
+--
+-- @since 999999999
 type DuoidalTrans :: ((Type -> Type) -> Type -> Type) -> Constraint
 class (forall m. (Duoidal m) => Duoidal (t m)) => DuoidalTrans t where
   lift :: (Duoidal m) => m a -> t m a
 
+-- | A normal duoid in the category of monad transformers.
+--
+-- @since 999999999
 type NormalTrans :: ((Type -> Type) -> Type -> Type) -> Constraint
 class
   (DuoidalTrans t, forall m. (Duoidal.Normal m) => Duoidal.Normal (t m)) =>
