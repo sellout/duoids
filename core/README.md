@@ -1,5 +1,6 @@
 # Duoids
 
+[![Hackage Version](https://img.shields.io/hackage/v/duoids)](https://hackage.haskell.org/package/duoids)
 [![Packaging status](https://repology.org/badge/tiny-repos/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
 [![latest packaged versions](https://repology.org/badge/latest-versions/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
 

@@ -1,7 +1,8 @@
-# Duoids
+# Algebraic Graph Duoids
 
-[![Packaging status](https://repology.org/badge/tiny-repos/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
-[![latest packaged versions](https://repology.org/badge/latest-versions/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
+[![Hackage Version](https://img.shields.io/hackage/v/algebraic-graph-duoids)](https://hackage.haskell.org/package/algebraic-graph-duoids)
+[![Packaging status](https://repology.org/badge/tiny-repos/haskell:algebraic-graph-duoids.svg)](https://repology.org/project/haskell:algebraic-graph-duoids/versions)
+[![latest packaged versions](https://repology.org/badge/latest-versions/haskell:algebraic-graph-duoids.svg)](https://repology.org/project/haskell:algebraic-graph-duoids/versions)
 
 [Duoids](https://hackage.haskell.org/package/duoids) applied to the [algebraic-graphs](https://hackage.haskell.org/package/algebraic-graphs) package.
 
@@ -91,7 +92,7 @@ Yes, in development, `-Werror` is often (and should be) used. However, that just
 
 ## licensing
 
-This package is licensed under [The GNU AGPL 3.0 or later](./LICENSE). If you need a license for usage that isn’t covered under the AGPL, please contact [Greg Pfeil](mailto:greg@technomadic.org?subject=licensing%20duoids).
+This package is licensed under [The GNU AGPL 3.0 only](./LICENSE). If you need a license for usage that isn’t covered under the AGPL, please contact [Greg Pfeil](mailto:greg@technomadic.org?subject=licensing%20duoids).
 
 You should review the [license report](docs/license-report.md) for details about dependency licenses.
 

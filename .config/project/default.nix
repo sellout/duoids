@@ -1,64 +1,77 @@
+### All available options for this file are listed in
+### https://sellout.github.io/project-manager/options.xhtml
 {
   config,
-  flaky,
   lib,
-  pkgs,
   self,
-  supportedSystems,
   ...
 }: {
   project = {
     name = "duoids";
     summary = "Unifying parallel and sequential operations";
     file = let
-      copyLicenses = dir: {summary ? ./LICENSE.localSummary}: {
+      ## Cabal requires many files to exist at the package level, rather than
+      ## the repo level. This makes copies of the individual files into the
+      ## package directory.
+      ##
+      ## TODO: Move something like this to Flaky.
+      perPackageFiles = dir: {summary ? ./LICENSE.localSummary}: {
         "${dir}/LICENSE".source = summary;
         "${dir}/LICENSE.AGPL-3.0-only".source = ../../LICENSE.AGPL-3.0-only;
         "${dir}/LICENSE.Universal-FOSS-exception-1.0".source =
           ../../LICENSE.Universal-FOSS-exception-1.0;
-        "${dir}/LICENSE.commercial".source = ../../LICENSE.commercial;
+        "${dir}/LICENSE.proprietary".source = ../../LICENSE.proprietary;
+        ## We might want to put this somewhere else (like .config/henforcer/),
+        ## but that isn’t currently an option, because of flipstone/henforcer#7.
+        "${dir}/henforcer.toml".text =
+          lib.pm.generators.toTOML {} {
+            globalSection = {};
+            sections = {
+              forAnyModule = {
+                ## doesn’t yet support nested attr sets
+                # allowedAliasUniqueness.allAliasesUniqueExcept = [];
+                maximumExportsPlusHeaderUndocumented = 0;
+                maximumExportsWithoutSince = 0;
+                moduleHeaderCopyrightMustExistNonEmpty = true;
+                ## We want to require a description, but just a “normal”
+                ## description, not the header field.
+                moduleHeaderDescriptionMustExistNonEmpty = false;
+                moduleHeaderLicenseMustExistNonEmpty = true;
+              };
+            };
+          }
+          ## NB: `toTOML` is really just an INI generator, so it can’t handle a
+          ##     lot of syntax. This tacks some bits onto the end that the INI
+          ##     generator does’t like.
+          + ''
+            # Exclude auto-generated `Paths` module
+            [[forPatternModules]]
+            pattern = "Paths_*"
+            [forPatternModules.rulesToIgnore]
+            all = true
+
+            # Exclude auto-generated `Build_doctests` module
+            [[forSpecifiedModules]]
+            module = "Build_doctests"
+            [forSpecifiedModules.rulesToIgnore]
+            all = true
+          '';
       };
     in
       ## “core” additionally has BSD-3-Clause from the borrowed async code.
-      copyLicenses "core" {summary = ../../LICENSE;}
+      perPackageFiles "core" {summary = ../../LICENSE;}
       // {"core/LICENSE.BSD-3-Clause".source = ../../LICENSE.BSD-3-Clause;}
-      // copyLicenses "algebraic-graphs" {}
-      // copyLicenses "hedgehog" {}
-      // copyLicenses "transformers" {};
+      // perPackageFiles "algebraic-graphs" {}
+      // perPackageFiles "hedgehog" {}
+      // perPackageFiles "transformers" {};
   };
 
   imports = [./hlint.nix];
 
-  ## dependency management
-  services.renovate.enable = true;
-
-  ## development
-  programs = {
-    direnv.enable = true;
-    # This should default by whether there is a .git file/dir (and whether it’s
-    # a file (worktree) or dir determines other things – like where hooks
-    # are installed.
-    git.enable = true;
-  };
-
   ## formatting
-  editorconfig.enable = true;
-
-  programs = {
-    treefmt = {
-      enable = true;
-      ## TODO: See numtide/treefmt-nix#419, but with any luck, prettier works on
-      ##       i686-linux again …
-      programs.prettier.enable = lib.mkForce true;
-    };
-    vale = {
-      enable = true;
-      vocab.${config.project.name}.accept = ["duoid"];
-    };
-  };
+  programs.vale.vocab.${config.project.name}.accept = ["duoid"];
 
   ## CI
-  services.garnix.enable = true;
   ## FIXME: Shouldn’t need `mkForce` here (or to duplicate the base contexts).
   ##        Need to improve module merging.
   services.github.settings.branches.main.protection.required_status_checks.contexts =
@@ -69,16 +82,36 @@
         "check-licenses"
       ]
       ++ lib.concatMap (sys:
-        lib.concatMap (ghc: [
-          "build (${ghc}, ${sys})"
-          "build (--prefer-oldest, ${ghc}, ${sys})"
-        ])
+        lib.concatMap (ghc:
+          ## Don’t add `exclude`d matrix entries to the required list
+          ##
+          ## TODO: Make this less manual (like the `include` component).
+            if
+              ## GHC before 8.4 needs an older Ubuntu
+              lib.versionOlder ghc "8.4"
+              && sys == "ubuntu-24.04"
+              ## GHC doesn’t support ARM before GHC 9.2.
+              || lib.versionOlder ghc "9.2"
+              && builtins.elem sys ["macos-15" "ubuntu-24.04-arm"]
+              ## GHC 9.2.1 relied on libnuma at runtime for aarch64
+              || ghc == "9.2.1" && sys == "ubuntu-24.04-arm"
+            then []
+            else [
+              "build (${ghc}, ${sys})"
+              "build (--prefer-oldest, ${ghc}, ${sys})"
+            ])
         self.lib.nonNixTestedGhcVersions)
-      config.services.haskell-ci.systems);
+      config.services.haskell-ci.systems
+      ## Add `include`d matrix entries to the required list.
+      ++ map (
+        entry:
+          if entry.bounds == ""
+          then "build (${entry.ghc}, ${entry.os})"
+          else "build (${entry.bounds}, ${entry.ghc}, ${entry.os})"
+      )
+      config.services.haskell-ci.include);
   services.haskell-ci = {
     inherit (self.lib) defaultGhcVersion;
-    ## Versions required by Nixpkgs 25.05, but not selected by GitHub jobs.
-    extraDependencyVersions = ["doctest-0.22.6" "doctest-0.24.0"];
     ghcVersions = self.lib.nonNixTestedGhcVersions;
     cabalPackages = {
       algebraic-graph-duoids = "algebraic-graphs";
@@ -86,13 +119,19 @@
       duoids = "core";
       duoids-hedgehog = "hedgehog";
     };
+    ## The latest Stackage LTS that we also build on GitHub for.
     latestGhcVersion = "9.10.1";
   };
 
   ## publishing
-  services.github.enable = true;
-  services.github.settings.repository.topics = [
-    "algebraic-structures"
-    "concurrency"
-  ];
+  services = {
+    ## This needs to be disabled for Haskell. See flakestry/flakestry.dev#53.
+    ##
+    ## TODO: Move this to Flaky.
+    flakestry.enable = lib.mkForce false;
+    github.settings.repository.topics = [
+      "algebraic-structures"
+      "concurrency"
+    ];
+  };
 }

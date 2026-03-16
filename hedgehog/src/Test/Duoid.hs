@@ -3,7 +3,7 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Test.Duoid
   ( validate,
     validateNormal,
@@ -63,6 +63,9 @@ nonNormalProperties laws genA =
     ("swapUnit", Hedgehog.property . Hedgehog.assert $ checkLaw (swapUnit laws) ())
   ]
 
+-- | Check all properties against a `Duoid` instance.
+--
+-- @since 0.0.1
 validate ::
   forall a.
   (Duoid a, Show a, Typeable a) =>
@@ -73,6 +76,9 @@ validate fn genA =
   Hedgehog.Group (Hedgehog.GroupName $ "Duoid " <> showType genA) $
     nonNormalProperties (Duoid.getLaws fn) genA
 
+-- | Check all properties against a `Duoid.Normal` duoid instance.
+--
+-- @since 0.0.1
 validateNormal ::
   forall a.
   (Duoid.Normal a, Show a, Typeable a) =>

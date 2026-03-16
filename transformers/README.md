@@ -1,7 +1,11 @@
-# Duoids
+# Duoidal Transformers
 
-[![Packaging status](https://repology.org/badge/tiny-repos/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
-[![latest packaged versions](https://repology.org/badge/latest-versions/haskell:duoids.svg)](https://repology.org/project/haskell:duoids/versions)
+[![Hackage
+Version](https://img.shields.io/hackage/v/duoidal-transformers)](https://hackage.haskell.org/package/duoidal-transformers)
+[![Packaging
+status](https://repology.org/badge/tiny-repos/haskell:duoidal-transformers.svg)](https://repology.org/project/haskell:duoidal-transformers/versions)
+[![latest packaged
+versions](https://repology.org/badge/latest-versions/haskell:duoidal-transformers.svg)](https://repology.org/project/haskell:duoidal-transformers/versions)
 
 [Duoids](https://hackage.haskell.org/package/duoids) applied to the [transformers](https://hackage.haskell.org/package/transformers) package.
 
@@ -91,7 +95,7 @@ Yes, in development, `-Werror` is often (and should be) used. However, that just
 
 ## licensing
 
-This package is licensed under [The GNU AGPL 3.0 or later](./LICENSE). If you need a license for usage that isn’t covered under the AGPL, please contact [Greg Pfeil](mailto:greg@technomadic.org?subject=licensing%20duoids).
+This package is licensed under [The GNU AGPL 3.0 only](./LICENSE). If you need a license for usage that isn’t covered under the AGPL, please contact [Greg Pfeil](mailto:greg@technomadic.org?subject=licensing%20duoids).
 
 You should review the [license report](docs/license-report.md) for details about dependency licenses.
 

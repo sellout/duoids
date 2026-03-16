@@ -27,9 +27,24 @@
       };
     }
 
-    {ignore = {name = "Use list comprehension";};}
-    ## This is because duoids give `pure` and `return` distinct semantics.
-    {ignore = {name = "Use pure";};}
+    {
+      ignore.name = [
+        ## This can be removed once we no longer support ≤ base 4.18, which
+        ## doesn’t yet export `Data.Functor.unzip`.
+        "Avoid NonEmpty.unzip"
+        ## This complains when we use a common import and then import from the
+        ## same module under a CPP conditional. Since Ormolu handles combinig
+        ## imports when possible anyway, this warning isn’t helpful.
+        "Use fewer imports"
+        ## I just don’t like them (even the monadic variant).
+        "Use list comprehension"
+        ## These are because duoids give `Applicative`- and `Monad`-constrained
+        ## operations distinct semantics.
+        "Use pure"
+        "Use traverse"
+        "Use traverse_"
+      ];
+    }
 
     {
       package = {
@@ -75,13 +90,6 @@
             hint = {
               lhs = "maybe (pure ())";
               rhs = "traverse_";
-              note = "IncreasesLaziness";
-            };
-          }
-          {
-            hint = {
-              lhs = "maybe (return ())";
-              rhs = "mapM_";
               note = "IncreasesLaziness";
             };
           }

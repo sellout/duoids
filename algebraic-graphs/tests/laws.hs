@@ -5,7 +5,7 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Main (main) where
 
 import safe "algebraic-graph-duoids" Algebra.Graph.Duoid.Orphans ()
@@ -36,6 +36,9 @@ genGraph genA =
       Connect <$> genGraph genA <*> genGraph genA
     ]
 
+-- | The entry point for law tests.
+--
+-- @since 0.0.1
 main :: IO ()
 main =
   Hedgehog.defaultMain $
