@@ -141,7 +141,10 @@ library
     src
   exposed-modules:
     Control.Duoidal
+    Control.Duoidal.Do
     Control.Duoidal.Either
+    Control.Duoidal.Fail
+    Control.Duoidal.Fix
     Control.Duoidal.Laws
     Data.Duoid
     Data.Duoid.Laws
