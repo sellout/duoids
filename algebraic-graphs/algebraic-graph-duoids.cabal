@@ -129,7 +129,7 @@ common defaults
     cpp-options: -DSELLOUT_NOISY_DEPRECATIONS
   if flag(lint)
     build-depends:
-      no-recursion ^>= {0.2.0, 0.3.0},
+      no-recursion ^>= {0.2.0, 0.3.0, 0.4.0},
     ghc-options:
       -fplugin=NoRecursion
 
@@ -137,7 +137,7 @@ library
   import: defaults
   hs-source-dirs: src
   build-depends:
-    algebraic-graphs ^>= {0.6.1, 0.7},
+    algebraic-graphs ^>= {0.6.1, 0.7, 0.8},
     duoids ^>= {0.0.1, 0.1.0},
   exposed-modules:
     Algebra.Graph.Duoid
@@ -149,7 +149,7 @@ test-suite laws
   main-is: tests/laws.hs
   build-depends:
     algebraic-graph-duoids,
-    algebraic-graphs ^>= {0.6.1, 0.7},
+    algebraic-graphs ^>= {0.6.1, 0.7, 0.8},
     duoids-hedgehog ^>= {0.0.1},
     hedgehog ^>= {1.2, 1.4, 1.5, 1.7},
 
@@ -159,7 +159,7 @@ test-suite doctests
   hs-source-dirs: tests
   main-is: doctests.hs
   build-depends:
-    doctest ^>= {0.21.1, 0.22.6, 0.24.0},
+    doctest ^>= {0.21.1, 0.22.6, 0.24.0, 0.25.0},
     algebraic-graph-duoids,
   -- TODO: The sections below here are necessary because we don’t have control
   --       over the generated `Build_doctests.hs` file. So we have to silence

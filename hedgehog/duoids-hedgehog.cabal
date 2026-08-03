@@ -130,7 +130,7 @@ common defaults
       -DSELLOUT_NOISY_DEPRECATIONS
   if flag(lint)
     build-depends:
-      no-recursion ^>= {0.2.0, 0.3.0},
+      no-recursion ^>= {0.2.0, 0.3.0, 0.4.0},
     ghc-options:
       -fplugin=NoRecursion
 
@@ -158,7 +158,7 @@ test-suite doctests
   hs-source-dirs: tests
   main-is: doctests.hs
   build-depends:
-    doctest ^>= {0.21.1, 0.22.6, 0.24.0},
+    doctest ^>= {0.21.1, 0.22.6, 0.24.0, 0.25.0},
     duoids-hedgehog,
   -- TODO: The sections below here are necessary because we don’t have control
   --       over the generated `Build_doctests.hs` file. So we have to silence
