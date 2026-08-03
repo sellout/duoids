@@ -1,6 +1,5 @@
 # Duoids
 
-[![built with garnix](https://img.shields.io/endpoint?url=https%3A%2F%2Fgarnix.io%2Fapi%2Fbadges%2Fsellout%2Fduoids)](https://garnix.io/repo/sellout/duoids)
 [![Nix CI](https://nix-ci.com/badge/gh:sellout:duoids)](https://nix-ci.com/gh:sellout:duoids)
 
 Unifying parallel and sequential operations
