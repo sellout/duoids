@@ -1,7 +1,7 @@
 cabal-version: 3.0
 
 name: algebraic-graph-duoids
-version: 0.0.1.0
+version: 0.0.2.0
 synopsis: Duoid instances for the algebraic-graphs package
 description: Algebraic graphs are an interesting example of duoids. This
              provides the relevant instances.
@@ -138,7 +138,7 @@ library
   hs-source-dirs: src
   build-depends:
     algebraic-graphs ^>= {0.6.1, 0.7},
-    duoids ^>= {0.0.1},
+    duoids ^>= {0.0.1, 0.1.0},
   exposed-modules:
     Algebra.Graph.Duoid
     Algebra.Graph.Duoid.Orphans

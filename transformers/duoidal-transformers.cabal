@@ -1,7 +1,7 @@
 cabal-version: 3.0
 
 name: duoidal-transformers
-version: 0.0.1.0
+version: 0.0.2.0
 synopsis: Extending the tranformers package with duoids
 description: Duoidal transformers are a lot like monad transformers, but appear
              to work parallelism magic.
@@ -138,7 +138,7 @@ library
   import: defaults
   hs-source-dirs: src
   build-depends:
-    duoids ^>= {0.0.1},
+    duoids ^>= {0.0.1, 0.1.0},
     transformers ^>= {0.6.1},
   exposed-modules:
     Control.Duoidal.Trans.Class
