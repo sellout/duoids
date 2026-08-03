@@ -60,7 +60,7 @@ flag noisy-deprecations
   -- Because disabling this flag won’t help the solver.
   manual: True
 
-flag verify-no-recursion
+flag lint
   description:
     Compile with "NoRecursion" enabled. This is intended for developers of this
     package.
@@ -128,7 +128,7 @@ common defaults
   if flag(noisy-deprecations)
     cpp-options:
       -DSELLOUT_NOISY_DEPRECATIONS
-  if flag(verify-no-recursion)
+  if flag(lint)
     build-depends:
       no-recursion ^>= {0.2.0, 0.3.0},
     ghc-options:
