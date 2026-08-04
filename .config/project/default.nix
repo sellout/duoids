@@ -58,13 +58,11 @@
   };
 
   ## CI
-  services.garnix.enable = true;
   ## FIXME: Shouldn’t need `mkForce` here (or to duplicate the base contexts).
   ##        Need to improve module merging.
   services.github.settings.branches.main.protection.required_status_checks.contexts =
     lib.mkForce
     ([
-        "All Garnix checks"
         "check-bounds"
         "check-licenses"
       ]
@@ -77,8 +75,12 @@
       config.services.haskell-ci.systems);
   services.haskell-ci = {
     inherit (self.lib) defaultGhcVersion;
-    ## Versions required by Nixpkgs 25.05, but not selected by GitHub jobs.
-    extraDependencyVersions = ["doctest-0.22.6" "doctest-0.24.0"];
+    extraDependencyVersions = [
+      "doctest-0.22.6" # Needed by Nixpkgs 25.05
+      "doctest-0.24.0" # Needed by Nixpkgs 25.05
+      "duoids-0.0.1"
+      "duoids-hedgehog-0.0.1"
+    ];
     ghcVersions = self.lib.nonNixTestedGhcVersions;
     cabalPackages = {
       algebraic-graph-duoids = "algebraic-graphs";

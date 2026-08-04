@@ -5,10 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog 1.1](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to the [Haskell Package Versioning Policy](https://pvp.haskell.org/).
 
-## [0.0.1.0] -
+## [0.0.2.0] - 2026-08-04
+
+### Added
+
+- Cabal flag `lint`, which (when disabled, as is the default) allows the
+  dependency graph to be pruned, potentially avoiding solver & compilation
+  issues.
+
+### Fixed
+
+- `no-recursion` is no longer a dependency by default (thanks to the
+  aforementioned `lint` change).
+
+## [0.0.1.0] - 2025-11-17
 
 ### Added
 
 - initial release of this package
 
-[0.1.0.0]: https://github.com/sellout/duoids/releases/tag/v0..0.1.0
+<!-- NB: The version on the left is the Haskell package version (PVP), the version on the right is the repo (tag) version (SemVer). Their only relationship is that a change of any severity on the left implies a change of at least that severity on the right. -->
+
+[0.0.2.0]: https://github.com/sellout/duoids/compare/v0.1.0...v1.0.0
+[0.0.1.0]: https://github.com/sellout/duoids/releases/tag/v0.1.0

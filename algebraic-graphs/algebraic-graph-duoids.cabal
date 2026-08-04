@@ -1,7 +1,7 @@
 cabal-version: 3.0
 
 name: algebraic-graph-duoids
-version: 0.0.1.0
+version: 0.0.2.0
 synopsis: Duoid instances for the algebraic-graphs package
 description: Algebraic graphs are an interesting example of duoids. This
              provides the relevant instances.
@@ -60,7 +60,7 @@ flag noisy-deprecations
   -- Because disabling this flag won’t help the solver.
   manual: True
 
-flag verify-no-recursion
+flag lint
   description:
     Compile with "NoRecursion" enabled. This is intended for developers of this
     package.
@@ -127,9 +127,9 @@ common defaults
     NoTypeApplications
   if flag(noisy-deprecations)
     cpp-options: -DSELLOUT_NOISY_DEPRECATIONS
-  if flag(verify-no-recursion)
+  if flag(lint)
     build-depends:
-      no-recursion ^>= {0.2.0, 0.3.0},
+      no-recursion ^>= {0.2.0, 0.3.0, 0.4.0},
     ghc-options:
       -fplugin=NoRecursion
 
@@ -137,8 +137,8 @@ library
   import: defaults
   hs-source-dirs: src
   build-depends:
-    algebraic-graphs ^>= {0.6.1, 0.7},
-    duoids ^>= {0.0.1},
+    algebraic-graphs ^>= {0.6.1, 0.7, 0.8},
+    duoids ^>= {0.0.1, 0.1.0},
   exposed-modules:
     Algebra.Graph.Duoid
     Algebra.Graph.Duoid.Orphans
@@ -149,7 +149,7 @@ test-suite laws
   main-is: tests/laws.hs
   build-depends:
     algebraic-graph-duoids,
-    algebraic-graphs ^>= {0.6.1, 0.7},
+    algebraic-graphs ^>= {0.6.1, 0.7, 0.8},
     duoids-hedgehog ^>= {0.0.1},
     hedgehog ^>= {1.2, 1.4, 1.5, 1.7},
 
@@ -159,7 +159,7 @@ test-suite doctests
   hs-source-dirs: tests
   main-is: doctests.hs
   build-depends:
-    doctest ^>= {0.21.1, 0.22.6, 0.24.0},
+    doctest ^>= {0.21.1, 0.22.6, 0.24.0, 0.25.0},
     algebraic-graph-duoids,
   -- TODO: The sections below here are necessary because we don’t have control
   --       over the generated `Build_doctests.hs` file. So we have to silence
