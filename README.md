@@ -35,7 +35,7 @@ See the package READMEs for usage information:
 - [duoidal-transformers](./transformers/README.md) – classes and instances extending [the transformers library](https://hackage.haskell.org/package/transformers)
 - [duoids-hedgehog](./hedgehog/README.md) – testing your duoid instances
 
-**NB**: This project currently supports GHC 9.6 and newer. There is no known impediment to supporting older versions. If you need support for an older version, please [open an issue](https://github.com/sellout/duoids/issues). Even if it already compiles on that version, knowing that someone is using it will allow me to add it to my support matrix so it’s likely to continue working going forward.
+**NB**: This project currently supports GHC 9.6 and newer. Nothing is known to prevent supporting older versions. If you need support for an older version, please [open an issue](https://github.com/sellout/duoids/issues). Even if it already compiles on that version, knowing that someone is using it will allow me to add it to my support matrix so it’s likely to continue working going forward.
 
 One immediately “neat” use cases that exercises most of the packages here something like `Writer (Graph a))`. If each new action is annotated with a unique value, say `tell (Vertex "some action")` , then the result will have a dependency graph of all actions.
 
@@ -92,7 +92,7 @@ This project is built with [Cabal](https://cabal.readthedocs.io/en/stable/index.
 
 ### environment
 
-We recommend the following steps to make working in this repository as easy as possible.
+We recommend the following steps to make working in this repository as smooth as possible.
 
 #### `direnv allow`
 
@@ -104,15 +104,15 @@ This will apply our repository-specific Git configuration to `git` commands run 
 
 ### CI failures
 
-There are a few jobs that may fail during CI and indicate specific changes that need to be made to your PR. If you run into any failures other than those that are listed here, they likely have remedies that are specific to your changes. If you need help replicating or resolving them, or think that they represent general patterns like the ones listed below, inform the maintainers. They can help you resolve them and decide if they should be called out with generic resolution processes.
+A few jobs may fail during CI and indicate specific changes that need to be made to your PR. If you run into any failures other than those that are listed here, they likely have remedies that are specific to your changes. If you need help replicating or resolving them, or think that they represent general patterns like the ones listed below, inform the maintainers. They can help you resolve them and decide if they should be called out with generic resolution processes.
 
 #### CI / check-bounds (check if bounds have changed)
 
 A failure in the “check if bounds have changed” step indicates that the bounds on direct dependencies have changed.
 
-It currently means that the discovered bounds have been restricted, which is always a breaking change. Unfortunately, this is sometimes not due to anything in the PR, but it does indicate we’re no longer testing the versions we used to – the Cabal solver will sometimes start choosing different packages, depending on releases. Due to the behavior of the solver, the most likely ones to change are in the middle of the range. There are a few ways to address this problem:
+It currently means that the discovered bounds have been restricted, which is always a breaking change. Unfortunately, this is sometimes not due to anything in the PR, but it does indicate we’re no longer testing the versions we used to – the Cabal solver will sometimes start choosing different packages, depending on releases. Due to the behavior of the solver, the most likely ones to change are in the middle of the range. You can address this problem in a few ways:
 
-1. Simply change the bounds as the output recommends, and make sure the PR bumps the major version number. If this change is already bumping the major version, this is probably the right choice to make.
+1. Change the bounds as the output recommends, and make sure the PR bumps the major version number. If this change is already bumping the major version, this is probably the right choice to make.
 2. Try to force Cabal to try the previous bounds. If you had manually changed the bounds because you needed some new feature, is it possible to conditionalize use of that feature so that we can also still use and test with older bounds?
 3. Tell CI that you want to keep the bounds the same even though they’re not tested. You do this by adding the old bound to the `extraDependencyVersions` list in flake.nix. This should be done carefully, but one use case is where those bounds _are_ tested by the Nix builds, but not by GitHub.
 
@@ -128,7 +128,7 @@ It’s tempting to think that moving a dependency from the transitive list to th
 
 #### check formatter
 
-There is some unformatted code (or perhaps some lint that needs addressing). If you use Nix, running `nix fmt` should automatically fix most of the formatting, and at least report additional lint that needs addressing.
+Some code is unformatted (or perhaps some lint needs addressing). If you use Nix, running `nix fmt` should automatically fix most of the formatting, and at least report additional lint that needs addressing.
 
 If you don’t use Nix, the CI log should contain some lines like
 

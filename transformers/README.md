@@ -8,7 +8,7 @@
 
 ## usage
 
-There is a `DuoidalTrans` class that works very much like `MonadTrans`. There are also `Duoidal` instances for various transformers.
+The `DuoidalTrans` class works much like `MonadTrans`. This also provides `Duoidal` instances for various transformers.
 
 - [comparisons to similar projects](#comparisons)
 

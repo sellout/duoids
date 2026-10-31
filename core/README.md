@@ -10,7 +10,7 @@ Duoids relate a pair of monoids or applicative functors, where one can be seen a
 
 ## usage
 
-**NB**: This package currently supports GHC 9.6 and newer. There is no known impediment to supporting older versions. If you need support for an older version, please [open an issue](https://github.com/sellout/duoids/issues). Even if it already compiles on that version, knowing that someone is using it will allow me to add it to my support matrix so it’s likely to continue working going forward.
+**NB**: This package currently supports GHC 9.6 and newer. Nothing is known to prevent supporting older versions. If you need support for an older version, please [open an issue](https://github.com/sellout/duoids/issues). Even if it already compiles on that version, knowing that someone is using it will allow me to add it to my support matrix so it’s likely to continue working going forward.
 
 - [comparisons to similar projects](#comparisons)
 
@@ -50,6 +50,6 @@ This seems like another approach to `Validation`, but I haven’t used it.
 
 ### [United Monoids](https://github.com/snowleopard/united)
 
-Andrey Mokhov’s independently-discovered implementation. I think united monoids are normal duoids in **Set**. United Monoids also offers a `Semilattice` class and avoids newtypes by treating the parallel semigroup (`overlay` in United Monoids) as primary, with sequential (`connect`) as an additional operation. It also forces both identities to be the same.
+Andrey Mokhov’s independently discovered implementation. I think united monoids are normal duoids in **Set**. United Monoids also offers a `Semilattice` class and avoids newtypes by treating the parallel semigroup (`overlay` in United Monoids) as primary, with sequential (`connect`) as an additional operation. It also forces both identities to be the same.
 
 In [his related blog post](https://blogs.ncl.ac.uk/andreymokhov/united-monoids/), Andrey talks about united semigroups, but I don’t think they exist in the package. They don’t exist here, because I haven’t seen any research on them (but they do seem useful).

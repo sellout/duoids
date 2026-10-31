@@ -8,7 +8,7 @@
 
 ## usage
 
-There are `Duoid` instances for the various graph representations in `algebraic-graphs`. There are also some implementations of `Duoid` methods to make it easy to provide `Duoid` instances for _other_ `Graph` instances.
+This provides `Duoid` instances for the various graph representations in `algebraic-graphs`, and some implementations of `Duoid` methods to help provide `Duoid` instances for _other_ `Graph` instances.
 
 - [comparisons to similar projects](#comparisons)
 
