@@ -1204,17 +1204,22 @@ instance (Semigroup e) => Applicative (Parallel (Either e)) where
       (Right _, Left e') -> Left e'
       (Right x, Right y) -> Right $ f x y
 
+-- TODO: `Either e` is only `Duoidal` when `e` is a `Semigroup`, but only the
+--       `Parallel` instance uses that, so GHC 9.14 reports the constraint as
+--       redundant on the `Sequential` ones. Figure out if/how we can make the
+--       instances interdependent, so that it isn’t.
+
 -- |
 --
 -- @since 0.0.1
-instance (Semigroup e) => Applicative (Sequential (Either e)) where
+instance Applicative (Sequential (Either e)) where
   pure = sequentialPure
   (<*>) = sequentialAp
 
 -- |
 --
 -- @since 0.0.1
-instance (Semigroup e) => Monad (Sequential (Either e)) where
+instance Monad (Sequential (Either e)) where
   (>>=) = sequentialBind
 
 -- |
