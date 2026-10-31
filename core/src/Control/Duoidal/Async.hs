@@ -119,6 +119,9 @@ type AsyncCancelled :: Type
 data AsyncCancelled = AsyncCancelled
   deriving stock (Show, Eq)
 
+-- |
+--
+-- @since 0.0.1
 instance Exception AsyncCancelled where
   fromException = asyncExceptionFromException
   toException = asyncExceptionToException
@@ -133,6 +136,9 @@ instance Exception AsyncCancelled where
 race :: IO a -> IO b -> IO (Either a b)
 race left right = concurrently' left right (either throwIO return =<<)
 
+-- | Runs both actions concurrently, and combines their results.
+--
+-- @since 0.0.1
 liftA2 :: (a -> b -> c) -> IO a -> IO b -> IO c
 liftA2 f left right = concurrently' left right (collect [])
   where
@@ -144,9 +150,16 @@ liftA2 f left right = concurrently' left right (collect [])
         Left ex -> throwIO ex
         Right r -> collect (r : xs) m
 
+-- | An action that never finishes, which is the unit of `<|>`.
+--
+-- @since 0.0.1
 empty :: IO a
 empty = forever $ threadDelay maxBound
 
+-- | Runs both actions concurrently, and returns the result of whichever
+--   finishes first.
+--
+-- @since 0.0.1
 (<|>) :: IO a -> IO a -> IO a
 a <|> b = either id id <$> race a b
 

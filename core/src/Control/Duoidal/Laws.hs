@@ -37,7 +37,7 @@ import "this" Data.Duoid.Laws (Law (Law))
 -- -- Duoidal.validateNormal @IO _ id id commonUnit
 -- -- Duoidal.validateNormal @[] _ id id (iso ((: []) . head) (repeat . head))
 
--- |
+-- | Parallel and sequential composition interchange.
 --
 -- ```
 --  |        |
@@ -49,6 +49,8 @@ import "this" Data.Duoid.Laws (Law (Law))
 -- \ /      \ /
 --  |        |
 -- ```
+--
+-- @since 0.0.1
 interchange ::
   (Duoidal f, Eq (f ((a, c), (b, d)))) =>
   (f ((a, b), (c, d)) -> f ((a, c), (b, d))) ->
@@ -59,10 +61,17 @@ interchange fn =
     (\(fa, fb, fc, fd) -> fn . liftA2 (,) (liftM2 (,) fa fb) $ liftM2 (,) fc fd)
     $ \(fa, fb, fc, fd) -> liftM2 (,) (liftA2 (,) fa fc) $ liftA2 (,) fb fd
 
+-- | The parallel unit is equal to the sequential composition of parallel units.
+--
+-- @since 0.0.1
 splitUnit :: (Duoidal f, Eq (f (a, a))) => (f a -> f (a, a)) -> Law a (f (a, a))
 splitUnit fn =
   Law (==) (fn . pure) $ uncurry (liftM2 (,)) . (pure &&& pure)
 
+-- | The parallel composition of sequential units is equal to the sequential
+--   unit.
+--
+-- @since 0.0.1
 joinUnit :: (Duoidal f, Eq (f a)) => (f (a, a) -> f a) -> Law a (f a)
 joinUnit fn =
   Law
@@ -70,9 +79,14 @@ joinUnit fn =
     (fn . uncurry (liftA2 (,)) . (return &&& return))
     return
 
+-- | The parallel unit relates to the sequential unit.
+--
+-- @since 0.0.1
 swapUnit :: (Duoidal f, Eq (f a)) => (f a -> f a) -> Law a (f a)
 swapUnit fn = Law (==) (fn . pure) return
 
 -- | Additional law for /normal/ duoids.
+--
+-- @since 0.0.1
 unswapUnit :: (Duoidal.Normal f, Eq (f a)) => (f a -> f a) -> Law a (f a)
 unswapUnit fn = Law (==) (fn . return) pure

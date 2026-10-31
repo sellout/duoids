@@ -63,6 +63,9 @@ nonNormalProperties laws genA =
     ("swapUnit", Hedgehog.property . Hedgehog.assert $ checkLaw (swapUnit laws) ())
   ]
 
+-- | A property group that checks the `Duoid` laws for a type.
+--
+-- @since 0.0.1
 validate ::
   forall a.
   (Duoid a, Show a, Typeable a) =>
@@ -73,6 +76,9 @@ validate fn genA =
   Hedgehog.Group (Hedgehog.GroupName $ "Duoid " <> showType genA) $
     nonNormalProperties (Duoid.getLaws fn) genA
 
+-- | A property group that checks the `Duoid.Normal` laws for a type.
+--
+-- @since 0.0.1
 validateNormal ::
   forall a.
   (Duoid.Normal a, Show a, Typeable a) =>

@@ -60,10 +60,12 @@ _genRealFrac =
     . Range.linear 1
     $ maxBound @a
 
--- |
+-- | Checks the duoid laws for types in base.
 --
 --  __FIXME__: For some reason, the `Ratio` cases generate (or shrink to) “Ratio
 --             has zero denominator”.
+--
+-- @since 0.0.1
 main :: IO ()
 main =
   Hedgehog.defaultMain $

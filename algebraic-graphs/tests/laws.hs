@@ -36,6 +36,9 @@ genGraph genA =
       Connect <$> genGraph genA <*> genGraph genA
     ]
 
+-- | Checks the duoid laws for graphs.
+--
+-- @since 0.0.1
 main :: IO ()
 main =
   Hedgehog.defaultMain $
