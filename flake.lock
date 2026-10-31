@@ -100,7 +100,9 @@
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
         "project-manager": "project-manager",
-        "systems": "systems"
+        "systems": [
+          "systems"
+        ]
       },
       "locked": {
         "lastModified": 1793492055,
@@ -392,7 +394,7 @@
           "flaky",
           "nixpkgs"
         ],
-        "systems": "systems_2"
+        "systems": "systems"
       }
     },
     "shellcheck-nix-attributes": {
@@ -412,21 +414,6 @@
       }
     },
     "systems": {
-      "locked": {
-        "lastModified": 1726558681,
-        "narHash": "sha256-vta8mxLa5XxpHfb9HCiavFqBrX2xJDvZiKHZOy4kvlA=",
-        "owner": "sellout",
-        "repo": "nix-systems",
-        "rev": "aa9520a9a0f92098d3576c3b4eafcb32c13d6800",
-        "type": "github"
-      },
-      "original": {
-        "owner": "sellout",
-        "repo": "nix-systems",
-        "type": "github"
-      }
-    },
-    "systems_2": {
       "locked": {
         "lastModified": 1791244623,
         "narHash": "sha256-uuanbkFk8a313Zfrxdcz8Us/yQtaxNnKJtX8v0ZPpd8=",

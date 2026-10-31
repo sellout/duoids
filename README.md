@@ -1,6 +1,8 @@
 # Duoids
 
+[![GitHub CI](https://github.com/sellout/duoids/actions/workflows/build.yml/badge.svg)](https://github.com/sellout/duoids/actions/workflows/build.yml)
 [![Nix CI](https://nix-ci.com/badge/gh:sellout:duoids)](https://nix-ci.com/gh:sellout:duoids)
+[![Project Manager](https://img.shields.io/badge/%20-Project%20Manager-%235277C3?logo=nixos&labelColor=%23cccccc)](https://sellout.github.io/project-manager/)
 
 Unifying parallel and sequential operations
 
