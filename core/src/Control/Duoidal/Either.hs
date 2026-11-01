@@ -27,5 +27,7 @@ import "this" Control.Duoidal (Parallel (Parallel))
 --   becomes
 --
 -- > traverse (noteAccum safeHead) :: t [a] -> Parallel (Either (NonEmpty a)) (t a)
+--
+-- @since 0.0.1
 noteAccum :: (Applicative f) => (a -> Maybe b) -> a -> Parallel (Either (f a)) b
 noteAccum f a = Parallel . maybe (Left $ pure a) pure $ f a

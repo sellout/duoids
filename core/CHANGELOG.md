@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog 1.1](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to the [Haskell Package Versioning Policy](https://pvp.haskell.org/).
@@ -23,8 +23,8 @@ and this project adheres to the [Haskell Package Versioning Policy](https://pvp.
 
 ### Changed
 
-- `Applicative (Parallel (Commutative f))` and `Applicative (Sequential
-  (Commutative f))` now require `f` to be a `Monad` rather than merely an
+- `Applicative (Parallel (Commutative f))` and
+  `Applicative (Sequential (Commutative f))` now require `f` to be a `Monad` rather than merely an
   `Applicative`. `Commutative` was always documented as being for commutative
   `Monad`s, but the instances asked for less than they meant; the new
   `Commutative` instances need the stronger constraint.

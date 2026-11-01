@@ -39,6 +39,9 @@ import "transformers" Control.Monad.Trans.Writer (WriterT (WriterT), runWriterT)
 import "this" Control.Duoidal.Trans.Class (DuoidalTrans, lift)
 import "this" Control.Duoidal.Trans.Class qualified as Duoidal (NormalTrans)
 
+-- |
+--
+-- @since 0.0.1
 instance (Semigroup e, Duoidal m) => Applicative (Parallel (ExceptT e m)) where
   pure = Parallel . lift . pure
   liftA2 f (Parallel (ExceptT a)) (Parallel (ExceptT b)) =
@@ -52,6 +55,9 @@ instance (Semigroup e, Duoidal m) => Applicative (Parallel (ExceptT e m)) where
       . Parallel
       $ fmap Parallel b
 
+-- |
+--
+-- @since 0.0.1
 instance (Semigroup e, Duoidal m) => Applicative (Sequential (ExceptT e m)) where
   pure = Sequential . ExceptT . return . return
   liftA2 f (Sequential (ExceptT a)) (Sequential (ExceptT b)) =
@@ -65,45 +71,81 @@ instance (Semigroup e, Duoidal m) => Applicative (Sequential (ExceptT e m)) wher
       . Sequential
       $ fmap Sequential b
 
+-- |
+--
+-- @since 0.0.1
 instance (Semigroup e, Duoidal m) => Monad (Sequential (ExceptT e m)) where
   (Sequential (ExceptT m)) >>= k =
     Sequential . ExceptT $
       either (return . Left) (runExceptT . getSequential . k) =<< m
 
+-- |
+--
+-- @since 0.0.1
 instance (Semigroup e, DuoidalIO m) => DuoidalIO (ExceptT e m) where
   liftIO = lift . liftIO
 
+-- |
+--
+-- @since 0.0.1
 instance (Semigroup e) => DuoidalTrans (ExceptT e) where
   lift = ExceptT . fmap pure
 
+-- |
+--
+-- @since 0.0.1
 instance (Semigroup e, Duoidal m) => Duoidal.Normal (ExceptT e m)
 
+-- |
+--
+-- @since 0.0.1
 instance (Semigroup e) => Duoidal.NormalTrans (ExceptT e)
 
+-- |
+--
+-- @since 0.0.1
 instance (Duoid w, Duoidal m) => Applicative (Parallel (WriterT w m)) where
   pure = Parallel . lift . pure
   Parallel (WriterT f) <*> Parallel (WriterT v) = Parallel . WriterT $ liftA2 k f v
     where
       k ~(a, w) ~(b, w') = (a b, w |-| w')
 
+-- |
+--
+-- @since 0.0.1
 instance (Duoid w, Duoidal m) => Applicative (Sequential (WriterT w m)) where
   pure = Sequential . lift . return
   Sequential (WriterT f) <*> Sequential (WriterT v) = Sequential . WriterT $ liftA2 k f v
     where
       k ~(a, w) ~(b, w') = (a b, w >-> w')
 
+-- |
+--
+-- @since 0.0.1
 instance (Duoid w, Duoidal m) => Monad (Sequential (WriterT w m)) where
   (Sequential (WriterT m)) >>= k = Sequential . WriterT $ Duoidal.do
     ~(a, w) <- m
     ~(b, w') <- runWriterT . getSequential $ k a
     return (b, w >-> w')
 
+-- |
+--
+-- @since 0.0.1
 instance (Duoid w, DuoidalIO m) => DuoidalIO (WriterT w m) where
   liftIO = lift . liftIO
 
+-- |
+--
+-- @since 0.0.1
 instance (Duoid w) => DuoidalTrans (WriterT w) where
   lift m = WriterT $ fmap (,sempty) m
 
+-- |
+--
+-- @since 0.0.1
 instance (Duoidal.Normal m, Duoid.Normal w) => Duoidal.Normal (WriterT w m)
 
+-- |
+--
+-- @since 0.0.1
 instance (Duoid.Normal w) => Duoidal.NormalTrans (WriterT w)

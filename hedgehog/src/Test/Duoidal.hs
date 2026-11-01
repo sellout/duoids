@@ -81,6 +81,9 @@ nonNormalProperties i spu ju swu genF =
         )
       ]
 
+-- | A property group that checks the `Duoidal` laws for a functor.
+--
+-- @since 0.0.1
 validate ::
   forall f.
   (Duoidal f, Eq1 f, Show1 f, Typeable f) =>

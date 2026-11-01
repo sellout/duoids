@@ -46,168 +46,306 @@ import safe "this" Algebra.Graph.Duoid
 
 -- adjacency int map
 
+-- |
+--
+-- @since 0.0.1
 instance Semigroup (Par AdjacencyIntMap) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance Monoid (Par AdjacencyIntMap) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance Semigroup (Seq AdjacencyIntMap) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance Monoid (Seq AdjacencyIntMap) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance Duoid.Normal AdjacencyIntMap
 
 -- unlabeled adjacency map
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Par (Unlabeled.AdjacencyMap a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Par (Unlabeled.AdjacencyMap a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Seq (Unlabeled.AdjacencyMap a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Seq (Unlabeled.AdjacencyMap a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Duoid.Normal (Unlabeled.AdjacencyMap a)
 
 -- relation
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Par (Relation a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Par (Relation a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Seq (Relation a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Seq (Relation a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Duoid.Normal (Relation a)
 
 -- symmetric relation
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Par (Symmetric.Relation a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Par (Symmetric.Relation a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Seq (Symmetric.Relation a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Seq (Symmetric.Relation a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Duoid.Normal (Symmetric.Relation a)
 
 -- unlabeled graph
 
+-- |
+--
+-- @since 0.0.1
 instance Semigroup (Par (Unlabeled.Graph a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance Monoid (Par (Unlabeled.Graph a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance Semigroup (Seq (Unlabeled.Graph a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance Monoid (Seq (Unlabeled.Graph a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance Duoid.Normal (Unlabeled.Graph a)
 
 -- transitive relation
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Par (TransitiveRelation a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Par (TransitiveRelation a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Seq (TransitiveRelation a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Seq (TransitiveRelation a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Duoid.Normal (TransitiveRelation a)
 
 -- reflexive relation
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Par (ReflexiveRelation a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Par (ReflexiveRelation a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Seq (ReflexiveRelation a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Seq (ReflexiveRelation a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Duoid.Normal (ReflexiveRelation a)
 
 -- preorder relation
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Par (PreorderRelation a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Par (PreorderRelation a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Seq (PreorderRelation a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Seq (PreorderRelation a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Duoid.Normal (PreorderRelation a)
 
 -- todo
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Par (Todo a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Par (Todo a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Semigroup (Seq (Todo a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Monoid (Seq (Todo a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Ord a) => Duoid.Normal (Todo a)
 
 -- labeled adjacency map
 
+-- |
+--
+-- @since 0.0.1
 instance
   (Dioid e, Eq e, Ord a) =>
   Semigroup (Par (Labeled.AdjacencyMap e a))
@@ -215,32 +353,59 @@ instance
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e, Eq e, Ord a) => Monoid (Par (Labeled.AdjacencyMap e a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e, Eq e, Ord a) => Semigroup (Seq (Labeled.AdjacencyMap e a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e, Eq e, Ord a) => Monoid (Seq (Labeled.AdjacencyMap e a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e, Eq e, Ord a) => Duoid.Normal (Labeled.AdjacencyMap e a)
 
 -- labeled graph
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e) => Semigroup (Par (Labeled.Graph e a)) where
   (<>) = parGraph
   stimes = stimesIdempotentMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e) => Monoid (Par (Labeled.Graph e a)) where
   mempty = parEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e) => Semigroup (Seq (Labeled.Graph e a)) where
   (<>) = seqGraph
   stimes = stimesMonoid
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e) => Monoid (Seq (Labeled.Graph e a)) where
   mempty = seqEmptyGraph
 
+-- |
+--
+-- @since 0.0.1
 instance (Dioid e) => Duoid.Normal (Labeled.Graph e a)
