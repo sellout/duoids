@@ -164,6 +164,16 @@ library
     Control.Duoidal.Trans.Class
     Control.Duoidal.Trans.Orphans
 
+test-suite laws
+  import: defaults
+  type: exitcode-stdio-1.0
+  main-is: tests/laws.hs
+  build-depends:
+    duoidal-transformers,
+    duoids-hedgehog ^>= {0.0.2},
+    hedgehog ^>= {1.2, 1.4, 1.5, 1.7},
+    transformers ^>= {0.6.1},
+
 test-suite doctests
   import: defaults
   type: exitcode-stdio-1.0
