@@ -12,7 +12,7 @@ import "base" Control.Applicative (Applicative)
 import "base" Control.Applicative qualified as Base (liftA2, pure, (<*>))
 import "base" Control.Category ((.))
 import "base" Control.Monad (Monad)
-import "base" Control.Monad qualified as Base ((>>=))
+import "base" Control.Monad qualified as Base (ap, (>>=))
 import "base" Data.Either (Either (Left), either)
 import "base" Data.Function (($))
 import "base" Data.Functor (fmap)
@@ -60,16 +60,7 @@ instance (Semigroup e, Duoidal m) => Applicative (Parallel (ExceptT e m)) where
 -- @since 0.0.1
 instance (Semigroup e, Duoidal m) => Applicative (Sequential (ExceptT e m)) where
   pure = Sequential . ExceptT . return . return
-  liftA2 f (Sequential (ExceptT a)) (Sequential (ExceptT b)) =
-    Sequential
-      . ExceptT
-      . fmap getSequential
-      . getSequential
-      . getCompose
-      . Base.liftA2 f (Compose . Sequential $ fmap Sequential a)
-      . Compose
-      . Sequential
-      $ fmap Sequential b
+  (<*>) = Base.ap
 
 -- |
 --
@@ -115,9 +106,7 @@ instance (Duoid w, Duoidal m) => Applicative (Parallel (WriterT w m)) where
 -- @since 0.0.1
 instance (Duoid w, Duoidal m) => Applicative (Sequential (WriterT w m)) where
   pure = Sequential . lift . return
-  Sequential (WriterT f) <*> Sequential (WriterT v) = Sequential . WriterT $ liftA2 k f v
-    where
-      k ~(a, w) ~(b, w') = (a b, w >-> w')
+  (<*>) = Base.ap
 
 -- |
 --
