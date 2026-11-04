@@ -168,7 +168,7 @@ import "base" Control.Applicative qualified as Base
     (<**>),
     (<*>),
   )
-import "base" Control.Category ((.))
+import "base" Control.Category (id, (.))
 import "base" Control.Monad (Monad)
 import "base" Control.Monad qualified as Base
   ( ap,
@@ -597,6 +597,10 @@ class (Duoidal m) => DuoidalIO m where
   --
   -- @since 0.0.1
   liftIO :: IO a -> m a
+
+-- | @since 99999
+instance DuoidalIO IO where
+  liftIO = id
 
 -- | `Base.pure` for the `Parallel` `Applicative` of a /normal/ duoidal functor,
 --   whose units coincide.
