@@ -590,6 +590,9 @@ infixr 1 <=<
 
 -- | `Duoidal` functors that can embed `IO`.
 --
+--   Their `Parallel` operations run `IO` concurrently, so executables using
+--   them should be linked with @-threaded@ (see `Parallel` `IO`).
+--
 -- @since 0.0.1
 type DuoidalIO :: (Type -> Type) -> Constraint
 class (Duoidal m) => DuoidalIO m where
@@ -1251,7 +1254,13 @@ instance (Monoid e) => Alternative (Sequential (Either e)) where
 
 -- IO
 
--- |
+-- | Runs each action in its own thread.
+--
+--   Link executables that use this with @-threaded@. Otherwise, a foreign call
+--   that blocks (like @process@’ `System.Process.waitForProcess), blocks every
+--   Haskell thread (see [the GHC User’s
+--   Guide](https://downloads.haskell.org/ghc/latest/docs/users_guide/exts/ffi.html#foreign-imports-and-multi-threading)),
+--   causing a parallel action to wait forever.
 --
 -- @since 0.0.1
 instance Applicative (Parallel IO) where
