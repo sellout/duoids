@@ -35,7 +35,10 @@ import safe "base" Data.Word (Word64)
 import safe "base" GHC.Real (infinity)
 import safe "base" Numeric.Natural (Natural)
 import safe "base" System.IO (IO)
-import safe "duoids" Control.Duoidal qualified as Duoidal (Commutative (Commutative))
+import safe "duoids" Control.Duoidal qualified as Duoidal
+  ( Commutative (Commutative),
+  )
+import safe "duoids" Data.Duoid (rationalLE)
 import safe "duoids-hedgehog" Test.Duoid qualified as Duoid
 import safe "duoids-hedgehog" Test.Duoidal qualified as Duoidal
 import "hedgehog" Hedgehog qualified
@@ -120,7 +123,7 @@ main =
           -- `Bounded` integers.
           . Range.linearFracFrom 0 0
           $ fromIntegral (maxBound :: Word64) + 1,
-        Duoid.validate (<=) genExtendedRational,
+        Duoid.validate rationalLE genExtendedRational,
         Duoid.validateNormal (<=) $ Gen.word Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word16 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word32 Range.linearBounded,
