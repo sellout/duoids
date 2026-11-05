@@ -10,9 +10,14 @@ where
 
 import safe "base" Control.Applicative ((<*>))
 import safe "base" Control.Category ((.))
-import safe "base" Data.Either (Either)
-import safe "base" Data.Function (($))
+import safe "base" Data.Bool (Bool (False, True), (&&))
+import safe "base" Data.Either (Either (Left, Right))
+import safe "base" Data.Eq (Eq, (==))
+import safe "base" Data.Function (flip, ($))
 import safe "base" Data.Functor (fmap, (<$>))
+import safe "base" Data.Functor.Classes (liftEq2)
+import safe "base" Data.List (isInfixOf)
+import safe "base" Data.Ord ((<=))
 import safe "base" Data.String (String)
 import safe "base" Numeric.Natural (Natural)
 import safe "base" System.IO (IO)
@@ -43,6 +48,22 @@ genWriterT genA =
   fmap WriterT . genEither $
     (,) <$> genA <*> Gen.integral (Range.linear 0 100)
 
+-- | Interchange can drop errors, and an outer error can mask an inner one, so
+--   the right side may fail less than the left: in an earlier layer’s place,
+--   or with fewer errors in the same layer.
+relExceptT ::
+  (Eq x) =>
+  ExceptT String (Either String) x ->
+  ExceptT String (Either String) x ->
+  Bool
+relExceptT (ExceptT lhs) (ExceptT rhs) =
+  case (lhs, rhs) of
+    (Left e, Left e') -> e' `isInfixOf` e
+    (Left _, Right (Left _)) -> True
+    (Right (Left e), Right (Left e')) -> e' `isInfixOf` e
+    (Right (Right x), Right (Right y)) -> x == y
+    _ -> False
+
 -- | Checks the laws for transformers’ instances.
 --
 -- @since 99999
@@ -51,6 +72,16 @@ main =
   Hedgehog.defaultMain $
     fmap
       Hedgehog.checkParallel
-      [ Duoidal.validateSequential genExceptT,
-        Duoidal.validateSequential genWriterT
+      [ Duoidal.validateNormal relExceptT genExceptT,
+        -- The underlying `Either` can drop errors, and output is ordered as
+        -- the `(,) Natural` writer’s.
+        Duoidal.validateNormal
+          ( \(WriterT a) (WriterT b) ->
+              liftEq2
+                (flip isInfixOf)
+                (\(x, w) (y, w') -> x == y && w <= w')
+                a
+                b
+          )
+          genWriterT
       ]
