@@ -124,7 +124,6 @@
       "doctest-0.22.6" # Needed by Nixpkgs 25.05
       "doctest-0.24.0" # Needed by Nixpkgs 25.05
       "duoids-0.0.1"
-      "duoids-hedgehog-0.0.1"
     ];
     ghcVersions = self.lib.nonNixTestedGhcVersions;
     cabalPackages = {
