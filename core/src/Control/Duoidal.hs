@@ -155,7 +155,6 @@ where
 import "base" Control.Applicative
   ( Alternative,
     Applicative,
-    Const (Const),
     empty,
     (<|>),
   )
@@ -1163,38 +1162,6 @@ instance Monad (Sequential ((->) r)) where
 --
 -- @since 0.1.0
 instance Normal ((->) r)
-
--- Const
-
--- |
---
--- @since 0.1.0
-instance (Monoid a) => Applicative (Parallel (Const a)) where
-  pure = normalPure
-  liftA2 f (Parallel a) (Parallel b) = Parallel $ liftA2 f a b
-
--- |
---
--- @since 0.1.0
-instance (Monoid a) => Applicative (Sequential (Const a)) where
-  pure = Sequential . pure
-  liftA2 f (Sequential a) = Sequential . Base.liftA2 f a . getSequential
-
--- | The `Const` duoidal functor provides an illustration of why we need to have
---   both `Parallel` and `Sequential` newtypes – relying on the underlying
---   `Applicative` (and only having the `Sequential` newtype) would mean that
---   any duoidal structure would only have a `Monad` available under
---   `Sequential`, which would be a prettty serious impact. On the other hand,
---   relying on the underlying `Monad` (and only having the `Parallel` newtype)
---   is much more natural, but `Const`, for example, having a `Monad` instance
---   would make it basically useless, and the more interesting `Applicative`
---   instance would only be available under the `Parallel` netwype. The current
---   structure allows either the `Applicative` or `Monad` instance to be the one
---   exposed directly.
---
--- @since 0.1.0
-instance (Monoid a) => Monad (Sequential (Const a)) where
-  Sequential (Const a) >>= _ = Sequential $ Const a
 
 -- Either
 
