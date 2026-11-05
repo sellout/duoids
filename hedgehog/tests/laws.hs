@@ -28,26 +28,18 @@ import safe "base" Data.Monoid qualified as Monoid
 import safe "base" Data.Ord (Down (Down), (<=))
 import safe "base" Data.Proxy (Proxy (Proxy))
 import safe "base" Data.Ratio (Ratio, Rational)
-import safe "base" Data.Semigroup ((<>))
 import safe "base" Data.Semigroup qualified as Semigroup
 import safe "base" Data.String (String)
 import safe "base" Data.Tuple (Solo)
-import safe "base" Data.Typeable (Typeable, typeRep)
 import safe "base" Data.Word (Word64)
 import safe "base" GHC.Real (infinity)
 import safe "base" Numeric.Natural (Natural)
 import safe "base" System.IO (IO)
-import safe "base" Text.Show (Show, showsPrec)
 import safe "duoids" Control.Duoidal qualified as Duoidal (Commutative (Commutative))
-import safe "duoids" Data.Duoid (Duoid, (>->))
 import safe "duoids-hedgehog" Test.Duoid qualified as Duoid
 import safe "duoids-hedgehog" Test.Duoidal qualified as Duoidal
 import "hedgehog" Hedgehog qualified
 import "hedgehog" Hedgehog.Gen qualified as Gen
-import "hedgehog" Hedgehog.Internal.Property qualified as Hedgehog
-  ( GroupName (GroupName),
-    PropertyName (PropertyName),
-  )
 import safe "hedgehog" Hedgehog.Main qualified as Hedgehog
 import "hedgehog" Hedgehog.Range qualified as Range
 import safe "base" Prelude (fromIntegral, maxBound, minBound, (+), (-))
@@ -66,25 +58,7 @@ genExtendedRational =
           $ fromIntegral (maxBound :: Word64) + 1
       ),
       (1, pure infinity),
-      (1, pure $ -infinity)
-    ]
-
--- | `Seq` is a `Monoid`, so `>->` must associate. `Test.Duoid` doesn’t check
---   this yet.
-seqAssociative ::
-  forall a.
-  (Duoid a, Eq a, Show a, Typeable a) =>
-  Hedgehog.Gen a -> Hedgehog.Group
-seqAssociative genA =
-  Hedgehog.Group
-    ( Hedgehog.GroupName . ("Seq " <>) $
-        showsPrec 11 (typeRep (Proxy :: Proxy a)) ""
-    )
-    [ ( Hedgehog.PropertyName "associativity",
-        Hedgehog.property do
-          (a, b, c) <- Hedgehog.forAll $ (,,) <$> genA <*> genA <*> genA
-          (a >-> b) >-> c Hedgehog.=== a >-> (b >-> c)
-      )
+      (1, pure -infinity)
     ]
 
 -- | Never empty, since it can obscure how combinations were reached.
@@ -152,7 +126,6 @@ main =
         Duoid.validateNormal (<=) $ Gen.word32 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word64 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word8 Range.linearBounded,
-        seqAssociative genExtendedRational,
         -- Sequencing stops at the first error, so interchange can drop some.
         Duoidal.validateNormal (liftEq2 (flip isInfixOf) (==)) genEither,
         Duoidal.validateNormal (==) Gen.maybe,
