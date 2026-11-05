@@ -6,17 +6,22 @@
 -- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 module Main (main) where
 
-import safe "base" Control.Applicative (liftA2)
-import safe "base" Control.Category ((.))
+import safe "base" Control.Applicative (liftA2, (<*>))
+import safe "base" Control.Category (id, (.))
+import safe "base" Data.Either (Either)
 import safe "base" Data.Function (($))
-import safe "base" Data.Functor (fmap)
+import safe "base" Data.Functor (fmap, (<$>))
+import safe "base" Data.Functor.Identity (Identity (Identity))
 import safe "base" Data.Int (Int64)
 import safe "base" Data.Ord ((<=))
 import safe "base" Data.Ratio (Ratio, Rational, (%))
+import safe "base" Data.String (String)
+import safe "base" Data.Tuple (fst)
 import safe "base" Data.Word (Word64)
 import safe "base" Numeric.Natural (Natural)
 import safe "base" System.IO (IO)
 import safe "duoids-hedgehog" Test.Duoid qualified as Duoid
+import safe "duoids-hedgehog" Test.Duoidal qualified as Duoidal
 import "hedgehog" Hedgehog qualified
 import "hedgehog" Hedgehog.Gen qualified as Gen
 import safe "hedgehog" Hedgehog.Main qualified as Hedgehog
@@ -59,6 +64,26 @@ _genRealFrac =
     . Gen.integral
     . Range.linear 1
     $ maxBound @a
+
+swap :: ((a, b), (c, d)) -> ((a, c), (b, d))
+swap ((a, b), (c, d)) = ((a, c), (b, d))
+
+dup :: a -> (a, a)
+dup a = (a, a)
+
+-- | Never empty, since it can obscure how combinations were reached.
+genString :: Hedgehog.Gen String
+genString = Gen.string (Range.constant 1 2) $ Gen.element "ab"
+
+-- |
+--
+--  __NOTE__: This uses `Gen.either_`, because `Gen.either` makes `Left` rare as
+--            the size grows.
+genEither :: Hedgehog.Gen a -> Hedgehog.Gen (Either String a)
+genEither = Gen.either_ genString
+
+genWriter :: Hedgehog.Gen a -> Hedgehog.Gen (Natural, a)
+genWriter genA = (,) <$> Gen.integral (Range.linear 0 100) <*> genA
 
 -- | Checks the duoid laws for types in base.
 --
@@ -108,5 +133,9 @@ main =
         Duoid.validateNormal (<=) $ Gen.word16 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word32 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word64 Range.linearBounded,
-        Duoid.validateNormal (<=) $ Gen.word8 Range.linearBounded
+        Duoid.validateNormal (<=) $ Gen.word8 Range.linearBounded,
+        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id genEither,
+        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id Gen.maybe,
+        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id $ fmap Identity,
+        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id genWriter
       ]
