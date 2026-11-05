@@ -4,7 +4,7 @@
 
 -- |
 -- Copyright: 2024 Greg Pfeil
--- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-commercial
+-- License: AGPL-3.0-only WITH Universal-FOSS-exception-1.0 OR LicenseRef-proprietary
 --
 -- Provides duoidal operations on functors. This lets us easily mix and match
 -- "parallel" and "sequential" operations on structures that have multiple
