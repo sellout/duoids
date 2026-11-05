@@ -7,16 +7,18 @@
 module Main (main) where
 
 import safe "base" Control.Applicative (liftA2, (<*>))
-import safe "base" Control.Category (id, (.))
+import safe "base" Control.Category ((.))
 import safe "base" Data.Either (Either)
-import safe "base" Data.Function (($))
+import safe "base" Data.Eq ((==))
+import safe "base" Data.Function (flip, ($))
 import safe "base" Data.Functor (fmap, (<$>))
+import safe "base" Data.Functor.Classes (liftEq2)
 import safe "base" Data.Functor.Identity (Identity (Identity))
 import safe "base" Data.Int (Int64)
+import safe "base" Data.List (isInfixOf)
 import safe "base" Data.Ord ((<=))
 import safe "base" Data.Ratio (Ratio, Rational, (%))
 import safe "base" Data.String (String)
-import safe "base" Data.Tuple (fst)
 import safe "base" Data.Word (Word64)
 import safe "base" Numeric.Natural (Natural)
 import safe "base" System.IO (IO)
@@ -64,12 +66,6 @@ _genRealFrac =
     . Gen.integral
     . Range.linear 1
     $ maxBound @a
-
-swap :: ((a, b), (c, d)) -> ((a, c), (b, d))
-swap ((a, b), (c, d)) = ((a, c), (b, d))
-
-dup :: a -> (a, a)
-dup a = (a, a)
 
 -- | Never empty, since it can obscure how combinations were reached.
 genString :: Hedgehog.Gen String
@@ -134,8 +130,11 @@ main =
         Duoid.validateNormal (<=) $ Gen.word32 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word64 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word8 Range.linearBounded,
-        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id genEither,
-        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id Gen.maybe,
-        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id $ fmap Identity,
-        Duoidal.validate (fmap swap) (fmap dup) (fmap fst) id genWriter
+        -- Sequencing stops at the first error, so interchange can drop some.
+        Duoidal.validateNormal (liftEq2 (flip isInfixOf) (==)) genEither,
+        Duoidal.validateNormal (==) Gen.maybe,
+        Duoidal.validateNormal (==) $ fmap Identity,
+        -- Output combines by `max` in parallel and `+` in sequence, and a
+        -- maximum of sums is at most the sum of maxima.
+        Duoidal.validateNormal (liftEq2 (<=) (==)) genWriter
       ]
