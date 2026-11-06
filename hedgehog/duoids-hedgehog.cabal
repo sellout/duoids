@@ -169,6 +169,7 @@ test-suite laws
   type: exitcode-stdio-1.0
   main-is: tests/laws.hs
   build-depends:
+    duoids ^>= {0.0.1, 0.1.0},
     duoids-hedgehog,
     hedgehog ^>= {1.2, 1.4, 1.5, 1.7},
 
