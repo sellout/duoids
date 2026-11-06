@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE Trustworthy #-}
 
 -- |
@@ -7,31 +8,32 @@
 module Test.Duoidal
   ( validate,
     validateSequential,
-    -- validateNormal,
+    validateNormal,
   )
 where
 
 import safe "base" Control.Applicative ((<*>))
 import safe "base" Control.Category ((.))
 import safe "base" Control.Monad ((<=<), (=<<))
+import safe "base" Data.Bool (Bool)
 import safe "base" Data.Eq (Eq, (==))
 import safe "base" Data.Foldable (elem)
 import safe "base" Data.Function (($))
 import safe "base" Data.Functor ((<$>))
-import safe "base" Data.Functor.Classes (Eq1, Show1)
 import safe "base" Data.Proxy (Proxy (Proxy))
 import safe "base" Data.Semigroup ((<>))
 import safe "base" Data.String (String)
 import safe "base" Data.Tuple (uncurry)
 import safe "base" Data.Typeable (Typeable, showsTypeRep, typeRep)
+import safe "base" Text.Show (Show)
 import safe "duoids" Control.Duoidal (Duoidal, liftM2, return, (>>=))
--- import safe qualified "duoids" Control.Duoidal as Duoidal (Normal)
+import safe "duoids" Control.Duoidal qualified as Duoidal (Normal)
 import safe "duoids" Control.Duoidal.Laws
   ( interchange,
     joinUnit,
     splitUnit,
     swapUnit,
-    --    unswapUnit,
+    unswapUnit,
   )
 import safe "duoids" Data.Duoid.Laws (Law (Law), checkLaw)
 import "hedgehog" Hedgehog qualified
@@ -57,7 +59,10 @@ apBind =
     fa >>= \a -> fb >>= \b -> return (a, b)
 
 apBindProperty ::
-  (Duoidal f, Eq1 f, Show1 f) =>
+  ( Duoidal f,
+    forall x. (Eq x) => Eq (f x),
+    forall x. (Show x) => Show (f x)
+  ) =>
   (forall x. Hedgehog.Gen x -> Hedgehog.Gen (f x)) ->
   (Hedgehog.PropertyName, Hedgehog.Property)
 apBindProperty genF =
@@ -68,40 +73,40 @@ apBindProperty genF =
           $ (,) <$> genFInt <*> genFInt
       )
 
+unitProperty ::
+  (Show a) =>
+  Hedgehog.PropertyName ->
+  Law a b ->
+  Hedgehog.Gen a ->
+  (Hedgehog.PropertyName, Hedgehog.Property)
+unitProperty name law genA =
+  ( name,
+    Hedgehog.property $
+      Hedgehog.assert . checkLaw law =<< Hedgehog.forAll genA
+  )
+
 nonNormalProperties ::
   forall f.
-  (Duoidal f, Eq1 f, Show1 f) =>
-  -- | `interchange`
-  (forall x. f ((x, x), (x, x)) -> f ((x, x), (x, x))) ->
-  -- | `splitUnit`
-  (forall x. f x -> f (x, x)) ->
-  -- | `joinUnit`
-  (forall x. f (x, x) -> f x) ->
-  -- | `swapUnit`
-  (forall x. f x -> f x) ->
-  -- | generator
+  ( Duoidal f,
+    forall x. (Eq x) => Eq (f x),
+    forall x. (Show x) => Show (f x)
+  ) =>
+  (forall x. (Eq x) => f x -> f x -> Bool) ->
   (forall x. Hedgehog.Gen x -> Hedgehog.Gen (f x)) ->
   [(Hedgehog.PropertyName, Hedgehog.Property)]
-nonNormalProperties i spu ju swu genF =
+nonNormalProperties rel genF =
   let genInt = Gen.int32 Range.linearBounded
       genFInt = genF genInt
    in [ ( "interchange",
           Hedgehog.property
-            . (Hedgehog.assert . checkLaw (interchange i) <=< Hedgehog.forAll)
+            . ( Hedgehog.assert . checkLaw (interchange rel)
+                  <=< Hedgehog.forAll
+              )
             $ (,,,) <$> genFInt <*> genFInt <*> genFInt <*> genFInt
         ),
-        ( "splitUnit",
-          Hedgehog.property $
-            Hedgehog.assert . checkLaw (splitUnit spu) =<< Hedgehog.forAll genInt
-        ),
-        ( "joinUnit",
-          Hedgehog.property $
-            Hedgehog.assert . checkLaw (joinUnit ju) =<< Hedgehog.forAll genInt
-        ),
-        ( "swapUnit",
-          Hedgehog.property $
-            Hedgehog.assert . checkLaw (swapUnit swu) =<< Hedgehog.forAll genInt
-        ),
+        unitProperty "splitUnit" (splitUnit rel) genInt,
+        unitProperty "joinUnit" (joinUnit rel) genInt,
+        unitProperty "swapUnit" (swapUnit rel) genInt,
         apBindProperty genF
       ]
 
@@ -110,22 +115,20 @@ nonNormalProperties i spu ju swu genF =
 -- @since 0.0.1
 validate ::
   forall f.
-  (Duoidal f, Eq1 f, Show1 f, Typeable f) =>
-  -- | `interchange`
-  (forall x. f ((x, x), (x, x)) -> f ((x, x), (x, x))) ->
-  -- | `splitUnit`
-  (forall x. f x -> f (x, x)) ->
-  -- | `joinUnit`
-  (forall x. f (x, x) -> f x) ->
-  -- | `swapUnit`
-  (forall x. f x -> f x) ->
+  ( Duoidal f,
+    forall x. (Eq x) => Eq (f x),
+    forall x. (Show x) => Show (f x),
+    Typeable f
+  ) =>
+  -- | relation
+  (forall x. (Eq x) => f x -> f x -> Bool) ->
   -- | generator
   (forall x. Hedgehog.Gen x -> Hedgehog.Gen (f x)) ->
   Hedgehog.Group
-validate i spu ju swu genF =
+validate rel genF =
   Hedgehog.Group
     (Hedgehog.GroupName $ "Duoidal " <> showType (Proxy :: Proxy f))
-    $ nonNormalProperties i spu ju swu genF
+    $ nonNormalProperties rel genF
 
 -- | A property group that checks that a functor’s `Sequential` `Applicative`
 --   agrees with its `Monad`. This is one of the properties `validate` checks,
@@ -135,7 +138,11 @@ validate i spu ju swu genF =
 -- @since 99999
 validateSequential ::
   forall f.
-  (Duoidal f, Eq1 f, Show1 f, Typeable f) =>
+  ( Duoidal f,
+    forall x. (Eq x) => Eq (f x),
+    forall x. (Show x) => Show (f x),
+    Typeable f
+  ) =>
   -- | generator
   (forall x. Hedgehog.Gen x -> Hedgehog.Gen (f x)) ->
   Hedgehog.Group
@@ -144,22 +151,26 @@ validateSequential genF =
     (Hedgehog.GroupName $ "Sequential " <> showType (Proxy :: Proxy f))
     [apBindProperty genF]
 
--- validateNormal ::
---   forall f.
---   (Duoidal f) =>
---   -- | `interchange`
---   (forall x. f x -> f x) ->
---   -- | `splitUnit`
---   (forall x. f x -> f x) ->
---   -- | `joinUnit`
---   (forall x. f x -> f x) ->
---   -- | `swapUnit` and `unswapUnit`
---   (forall x. Iso' (f x) (f x)) ->
---   -- | generator
---   (forall x. Hedgehog.Gen x -> Hedgehog.Gen (f x)) ->
---   Hedgehog.Group
--- validateNormal i spu ju swu genF =
---   let genFInt = genF Gen.int32
---    in Hedgehog.Group
---         (Hedgehog.GroupName $ "Duoidal.Normal" <> showType (Proxy :: Proxy f))
---         [("unswapUnit", Hedgehog.assert . checkLaw (unswapUnit $ from swu) =<< Hedgehog.forAll genInt)]
+-- | A property group that checks the `Duoidal.Normal` laws for a functor.
+--
+-- @since 99999
+validateNormal ::
+  forall f.
+  ( Duoidal.Normal f,
+    forall x. (Eq x) => Eq (f x),
+    forall x. (Show x) => Show (f x),
+    Typeable f
+  ) =>
+  -- | relation
+  (forall x. (Eq x) => f x -> f x -> Bool) ->
+  -- | generator
+  (forall x. Hedgehog.Gen x -> Hedgehog.Gen (f x)) ->
+  Hedgehog.Group
+validateNormal rel genF =
+  Hedgehog.Group
+    (Hedgehog.GroupName $ "Duoidal.Normal " <> showType (Proxy :: Proxy f))
+    $ unitProperty
+      "unswapUnit"
+      (unswapUnit rel)
+      (Gen.int32 Range.linearBounded)
+      : nonNormalProperties rel genF
