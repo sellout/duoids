@@ -26,7 +26,7 @@
     ## Flaky should generally be the source of truth for its inputs.
     flaky = {
       inputs.systems.follows = "systems";
-      url = "github:sellout/flaky";
+      url = "github:sellout/flaky/ci-caching";
     };
 
     flake-utils.follows = "flaky/flake-utils";
