@@ -24,14 +24,15 @@ where
 
 import "base" Control.Applicative (liftA2)
 import "base" Control.Category ((.))
+import "base" Data.Bool ((||))
 import "base" Data.Eq (Eq, (==))
 import "base" Data.Foldable (Foldable)
 import "base" Data.Function (const, ($))
 import "base" Data.Functor (Functor)
 import "base" Data.Kind (Constraint, Type)
 import "base" Data.Monoid (Monoid, mempty)
-import "base" Data.Ord (Ord, max, (<), (<=), (>))
-import "base" Data.Ratio (Ratio, Rational, (%))
+import "base" Data.Ord (Ord, max, (<))
+import "base" Data.Ratio (Ratio, Rational)
 import "base" Data.Semigroup
   ( Semigroup,
     stimes,
@@ -45,7 +46,7 @@ import "base" GHC.Real (infinity)
 import "base" Numeric.Natural (Natural)
 import "base" Text.Read (Read)
 import "base" Text.Show (Show)
-import "base" Prelude (Bounded, Integral, maxBound, minBound, (+))
+import "base" Prelude (Bounded, Integral, Num, maxBound, minBound, (+))
 
 -- | A wrapper to allow specifying a `Monoid` for the parallel (♢) component of
 --   a `Duoid`.
@@ -157,107 +158,78 @@ instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Semigroup (Par a) where
 instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Monoid (Par a) where
   mempty = Par minBound
 
+-- | Addition that stops at `maxBound`. It’s only correct for unsigned types,
+--   where a sum can’t fall below `minBound`. Even if this supported signed
+--   types, it couldn’t be associative on them.
+saturatingAdd :: (Bounded a, Num a, Ord a) => a -> a -> a
+saturatingAdd x y =
+  let z = x + y
+   in if z < x then maxBound else z
+
 -- | Saturating addition.
 --
 -- @since 0.0.1
-instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Semigroup (Seq a) where
-  Seq x <> Seq y =
-    let z = x + y
-     in Seq $
-          if y < 0
-            then
-              if z > x
-                then minBound
-                else z
-            else
-              if z < x
-                then maxBound
-                else z
+instance Semigroup (Seq Word) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
   stimes = stimesMonoid
 
 -- | Saturating addition.
 --
 -- @since 0.0.1
-instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Monoid (Seq a) where
+instance Monoid (Seq Word) where
   mempty = Seq 0
-
--- | Maximum.
---
--- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Semigroup (Par (Ratio a))
-  where
-  Par x <> Par y = Par $ max x y
-  stimes = stimesIdempotentMonoid
-
--- | Maximum.
---
--- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Monoid (Par (Ratio a))
-  where
-  mempty = Par . (minBound %) $ if (minBound :: a) <= 0 then 1 else maxBound
 
 -- | Saturating addition.
 --
 -- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Semigroup (Seq (Ratio a))
-  where
-  Seq x <> Seq y =
-    let z = x + y
-     in Seq $
-          if y < 0
-            then
-              if z > x
-                then minBound % 1
-                else z
-            else
-              if z < x
-                then maxBound % 1
-                else z
+instance Semigroup (Seq Word8) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
   stimes = stimesMonoid
 
 -- | Saturating addition.
 --
 -- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Monoid (Seq (Ratio a))
-  where
+instance Monoid (Seq Word8) where
   mempty = Seq 0
 
--- |
+-- | Saturating addition.
 --
 -- @since 0.0.1
-instance Normal (Ratio Word)
+instance Semigroup (Seq Word16) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
+  stimes = stimesMonoid
 
--- |
+-- | Saturating addition.
 --
 -- @since 0.0.1
-instance Normal (Ratio Word16)
+instance Monoid (Seq Word16) where
+  mempty = Seq 0
 
--- |
+-- | Saturating addition.
 --
 -- @since 0.0.1
-instance Normal (Ratio Word32)
+instance Semigroup (Seq Word32) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
+  stimes = stimesMonoid
 
--- |
+-- | Saturating addition.
 --
 -- @since 0.0.1
-instance Normal (Ratio Word64)
+instance Monoid (Seq Word32) where
+  mempty = Seq 0
 
--- |
+-- | Saturating addition.
 --
 -- @since 0.0.1
-instance Normal (Ratio Word8)
+instance Semigroup (Seq Word64) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
+  stimes = stimesMonoid
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Monoid (Seq Word64) where
+  mempty = Seq 0
 
 -- | Maximum.
 --
@@ -272,14 +244,14 @@ instance Semigroup (Par (Ratio Natural)) where
 instance Monoid (Par (Ratio Natural)) where
   mempty = Par 0
 
--- | Saturating addition.
+-- | Addition.
 --
 -- @since 0.0.1
 instance Semigroup (Seq (Ratio Natural)) where
   Seq x <> Seq y = Seq $ x + y
   stimes = stimesMonoid
 
--- | Saturating addition.
+-- | Addition.
 --
 -- @since 0.0.1
 instance Monoid (Seq (Ratio Natural)) where
@@ -298,33 +270,22 @@ instance Semigroup (Par Rational) where
 instance Monoid (Par Rational) where
   mempty = Par (-infinity)
 
--- | Saturating addition.
+-- | Addition, including infinities. @-∞@ absorbs everything, including @∞@;
+--   letting @-∞ + ∞@ be anything finite breaks associativity.
 --
 -- @since 0.0.1
 instance Semigroup (Seq Rational) where
   Seq x <> Seq y =
     Seq $
-      if x == (-infinity)
-        then
-          if y == infinity
-            then 0
-            else -infinity
+      if x == -infinity || y == -infinity
+        then -infinity
         else
-          if x == infinity
-            then
-              if y == (-infinity)
-                then 0
-                else infinity
-            else
-              if y == (-infinity)
-                then -infinity
-                else
-                  if y == infinity
-                    then infinity
-                    else x + y
+          if x == infinity || y == infinity
+            then infinity
+            else x + y
   stimes = stimesMonoid
 
--- | Saturating addition.
+-- | Addition, including infinities.
 --
 -- @since 0.0.1
 instance Monoid (Seq Rational) where

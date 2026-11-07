@@ -27,34 +27,65 @@ import safe "base" Data.List (isInfixOf)
 import safe "base" Data.Monoid qualified as Monoid
 import safe "base" Data.Ord (Down (Down), (<=))
 import safe "base" Data.Proxy (Proxy (Proxy))
-import safe "base" Data.Ratio (Ratio, Rational, (%))
+import safe "base" Data.Ratio (Ratio, Rational)
+import safe "base" Data.Semigroup ((<>))
 import safe "base" Data.Semigroup qualified as Semigroup
 import safe "base" Data.String (String)
 import safe "base" Data.Tuple (Solo)
+import safe "base" Data.Typeable (Typeable, typeRep)
 import safe "base" Data.Word (Word64)
+import safe "base" GHC.Real (infinity)
 import safe "base" Numeric.Natural (Natural)
 import safe "base" System.IO (IO)
+import safe "base" Text.Show (Show, showsPrec)
 import safe "duoids" Control.Duoidal qualified as Duoidal (Commutative (Commutative))
+import safe "duoids" Data.Duoid (Duoid, (>->))
 import safe "duoids-hedgehog" Test.Duoid qualified as Duoid
 import safe "duoids-hedgehog" Test.Duoidal qualified as Duoidal
 import "hedgehog" Hedgehog qualified
 import "hedgehog" Hedgehog.Gen qualified as Gen
+import "hedgehog" Hedgehog.Internal.Property qualified as Hedgehog
+  ( GroupName (GroupName),
+    PropertyName (PropertyName),
+  )
 import safe "hedgehog" Hedgehog.Main qualified as Hedgehog
 import "hedgehog" Hedgehog.Range qualified as Range
-import safe "base" Prelude (Bounded, Integral, fromIntegral, maxBound, minBound, (+), (-))
+import safe "base" Prelude (fromIntegral, maxBound, minBound, (+), (-))
 
-_genRealFrac :: forall a. (Bounded a, Integral a) => Hedgehog.Gen (Ratio a)
-_genRealFrac =
-  -- TODO: Was hoping for an implementation like this, but it errors (during
-  --       shrinking?) with a zero denominator.
-  -- Gen.realFrac_
-  --   . Range.linearFracFrom 0 (fromIntegral $ minBound @a)
-  --   . fromIntegral
-  --   $ maxBound @a
-  liftA2 (%) (Gen.integral . Range.linearFrom 0 (minBound @a) $ maxBound @a)
-    . Gen.integral
-    . Range.linear 1
-    $ maxBound @a
+-- | `Rational`, including the infinities its `Duoid` instances use. Half the
+--   values are infinite, because the combinations of infinities are the most
+--   interesting cases (and expose a bug in the @base@ instances).
+genExtendedRational :: Hedgehog.Gen Rational
+genExtendedRational =
+  Gen.frequency
+    [ ( 2,
+        Gen.realFrac_
+          -- The range bounds here push it just outside the range of `Bounded`
+          -- integers.
+          . Range.linearFracFrom 0 (fromIntegral (minBound :: Int64) - 1)
+          $ fromIntegral (maxBound :: Word64) + 1
+      ),
+      (1, pure infinity),
+      (1, pure $ -infinity)
+    ]
+
+-- | `Seq` is a `Monoid`, so `>->` must associate. `Test.Duoid` doesn’t check
+--   this yet.
+seqAssociative ::
+  forall a.
+  (Duoid a, Eq a, Show a, Typeable a) =>
+  Hedgehog.Gen a -> Hedgehog.Group
+seqAssociative genA =
+  Hedgehog.Group
+    ( Hedgehog.GroupName . ("Seq " <>) $
+        showsPrec 11 (typeRep (Proxy :: Proxy a)) ""
+    )
+    [ ( Hedgehog.PropertyName "associativity",
+        Hedgehog.property do
+          (a, b, c) <- Hedgehog.forAll $ (,,) <$> genA <*> genA <*> genA
+          (a >-> b) >-> c Hedgehog.=== a >-> (b >-> c)
+      )
+    ]
 
 -- | Never empty, since it can obscure how combinations were reached.
 genString :: Hedgehog.Gen String
@@ -97,53 +128,31 @@ relWriter4 (a, b, c, x) (a', b', c', y) =
 --   in base and this package. `IO` and @(->) r@ have no `Data.Eq.Eq`, so
 --   their `Duoidal` instances go unchecked.
 --
---  __FIXME__: For some reason, the `Ratio` cases generate (or shrink to) “Ratio
---             has zero denominator”.
---
 -- @since 0.0.1
 main :: IO ()
 main =
   Hedgehog.defaultMain $
     fmap
       Hedgehog.checkParallel
-      [ Duoid.validate (<=) (Gen.int Range.linearBounded),
-        Duoid.validate (<=) (Gen.int16 Range.linearBounded),
-        Duoid.validate (<=) (Gen.int32 Range.linearBounded),
-        Duoid.validate (<=) (Gen.int64 Range.linearBounded),
-        Duoid.validate (<=) (Gen.int8 Range.linearBounded),
-        Duoid.validateNormal (<=)
+      [ Duoid.validateNormal (<=)
           . Gen.integral @_ @Natural
           . Range.linearFrom 0 0
           -- The range bound here pushes it just outside the range of
           -- `Bounded` integers.
           $ fromIntegral (maxBound :: Word64) + 1,
-        -- Duoid.validate @(Ratio Int) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int16) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int32) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int64) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int8) (<=) genRealFrac,
         Duoid.validateNormal @(Ratio Natural) (<=)
           . Gen.realFrac_
           -- The range bounds here push it just outside the range of
           -- `Bounded` integers.
           . Range.linearFracFrom 0 0
           $ fromIntegral (maxBound :: Word64) + 1,
-        -- Duoid.validateNormal @(Ratio Word) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word16) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word32) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word64) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word8) (<=) genRealFrac,
-        Duoid.validate @Rational (<=)
-          . Gen.realFrac_
-          -- The range bounds here push it just outside the range of
-          -- `Bounded` integers.
-          . Range.linearFracFrom 0 (fromIntegral (minBound :: Int64) - 1)
-          $ fromIntegral (maxBound :: Word64) + 1,
+        Duoid.validate (<=) genExtendedRational,
         Duoid.validateNormal (<=) $ Gen.word Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word16 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word32 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word64 Range.linearBounded,
         Duoid.validateNormal (<=) $ Gen.word8 Range.linearBounded,
+        seqAssociative genExtendedRational,
         -- Sequencing stops at the first error, so interchange can drop some.
         Duoidal.validateNormal (liftEq2 (flip isInfixOf) (==)) genEither,
         Duoidal.validateNormal (==) Gen.maybe,
