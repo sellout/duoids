@@ -106,12 +106,7 @@ main =
   Hedgehog.defaultMain $
     fmap
       Hedgehog.checkParallel
-      [ Duoid.validate (<=) (Gen.int Range.linearBounded),
-        Duoid.validate (<=) (Gen.int16 Range.linearBounded),
-        Duoid.validate (<=) (Gen.int32 Range.linearBounded),
-        Duoid.validate (<=) (Gen.int64 Range.linearBounded),
-        Duoid.validate (<=) (Gen.int8 Range.linearBounded),
-        Duoid.validateNormal (<=)
+      [ Duoid.validateNormal (<=)
           . Gen.integral @_ @Natural
           . Range.linearFrom 0 0
           -- The range bound here pushes it just outside the range of

@@ -45,7 +45,7 @@ import "base" GHC.Real (infinity)
 import "base" Numeric.Natural (Natural)
 import "base" Text.Read (Read)
 import "base" Text.Show (Show)
-import "base" Prelude (Bounded, Integral, maxBound, minBound, (+))
+import "base" Prelude (Bounded, Integral, Num, maxBound, minBound, (+))
 
 -- | A wrapper to allow specifying a `Monoid` for the parallel (♢) component of
 --   a `Duoid`.
@@ -157,28 +157,77 @@ instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Semigroup (Par a) where
 instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Monoid (Par a) where
   mempty = Par minBound
 
+-- | Addition that stops at `maxBound`. It’s only correct for unsigned types,
+--   where a sum can’t fall below `minBound`. Even if this supported signed
+--   types, it couldn’t be associative on them.
+saturatingAdd :: (Bounded a, Num a, Ord a) => a -> a -> a
+saturatingAdd x y =
+  let z = x + y
+   in if z < x then maxBound else z
+
 -- | Saturating addition.
 --
 -- @since 0.0.1
-instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Semigroup (Seq a) where
-  Seq x <> Seq y =
-    let z = x + y
-     in Seq $
-          if y < 0
-            then
-              if z > x
-                then minBound
-                else z
-            else
-              if z < x
-                then maxBound
-                else z
+instance Semigroup (Seq Word) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
   stimes = stimesMonoid
 
 -- | Saturating addition.
 --
 -- @since 0.0.1
-instance {-# OVERLAPPABLE #-} (Bounded a, Integral a) => Monoid (Seq a) where
+instance Monoid (Seq Word) where
+  mempty = Seq 0
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Semigroup (Seq Word8) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
+  stimes = stimesMonoid
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Monoid (Seq Word8) where
+  mempty = Seq 0
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Semigroup (Seq Word16) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
+  stimes = stimesMonoid
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Monoid (Seq Word16) where
+  mempty = Seq 0
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Semigroup (Seq Word32) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
+  stimes = stimesMonoid
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Monoid (Seq Word32) where
+  mempty = Seq 0
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Semigroup (Seq Word64) where
+  Seq x <> Seq y = Seq $ saturatingAdd x y
+  stimes = stimesMonoid
+
+-- | Saturating addition.
+--
+-- @since 0.0.1
+instance Monoid (Seq Word64) where
   mempty = Seq 0
 
 -- | Maximum.
