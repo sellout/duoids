@@ -10,10 +10,13 @@ jobs: $ncpus
 if impl(ghc >= 9.8)
   semaphore: True
 
-flags:
-  -- Ensure development of this project always uses linters, even if it causes
-  -- the solver to fail.
-  +lint
+-- On Windows, GHC 9.8–9.12 take 20–60 s to load plugins, for every component,
+-- so we lint only on other platforms.
+if !(os(windows) && impl(ghc >= 9.8) && impl(ghc < 9.14))
+  flags:
+    -- Ensure development of this project always uses linters, even if it
+    -- causes the solver to fail.
+    +lint
 
 program-options
   ghc-options:
