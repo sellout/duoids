@@ -30,8 +30,8 @@ import "base" Data.Function (const, ($))
 import "base" Data.Functor (Functor)
 import "base" Data.Kind (Constraint, Type)
 import "base" Data.Monoid (Monoid, mempty)
-import "base" Data.Ord (Ord, max, (<), (<=), (>))
-import "base" Data.Ratio (Ratio, Rational, (%))
+import "base" Data.Ord (Ord, max, (<))
+import "base" Data.Ratio (Ratio, Rational)
 import "base" Data.Semigroup
   ( Semigroup,
     stimes,
@@ -233,84 +233,6 @@ instance Monoid (Seq Word64) where
 -- | Maximum.
 --
 -- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Semigroup (Par (Ratio a))
-  where
-  Par x <> Par y = Par $ max x y
-  stimes = stimesIdempotentMonoid
-
--- | Maximum.
---
--- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Monoid (Par (Ratio a))
-  where
-  mempty = Par . (minBound %) $ if (minBound :: a) <= 0 then 1 else maxBound
-
--- | Saturating addition.
---
--- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Semigroup (Seq (Ratio a))
-  where
-  Seq x <> Seq y =
-    let z = x + y
-     in Seq $
-          if y < 0
-            then
-              if z > x
-                then minBound % 1
-                else z
-            else
-              if z < x
-                then maxBound % 1
-                else z
-  stimes = stimesMonoid
-
--- | Saturating addition.
---
--- @since 0.0.1
-instance
-  {-# OVERLAPPABLE #-}
-  (Bounded a, Integral a) =>
-  Monoid (Seq (Ratio a))
-  where
-  mempty = Seq 0
-
--- |
---
--- @since 0.0.1
-instance Normal (Ratio Word)
-
--- |
---
--- @since 0.0.1
-instance Normal (Ratio Word16)
-
--- |
---
--- @since 0.0.1
-instance Normal (Ratio Word32)
-
--- |
---
--- @since 0.0.1
-instance Normal (Ratio Word64)
-
--- |
---
--- @since 0.0.1
-instance Normal (Ratio Word8)
-
--- | Maximum.
---
--- @since 0.0.1
 instance Semigroup (Par (Ratio Natural)) where
   Par x <> Par y = Par $ max x y
   stimes = stimesIdempotentMonoid
@@ -321,14 +243,14 @@ instance Semigroup (Par (Ratio Natural)) where
 instance Monoid (Par (Ratio Natural)) where
   mempty = Par 0
 
--- | Saturating addition.
+-- | Addition.
 --
 -- @since 0.0.1
 instance Semigroup (Seq (Ratio Natural)) where
   Seq x <> Seq y = Seq $ x + y
   stimes = stimesMonoid
 
--- | Saturating addition.
+-- | Addition.
 --
 -- @since 0.0.1
 instance Monoid (Seq (Ratio Natural)) where

@@ -27,7 +27,7 @@ import safe "base" Data.List (isInfixOf)
 import safe "base" Data.Monoid qualified as Monoid
 import safe "base" Data.Ord (Down (Down), (<=))
 import safe "base" Data.Proxy (Proxy (Proxy))
-import safe "base" Data.Ratio (Ratio, Rational, (%))
+import safe "base" Data.Ratio (Ratio, Rational)
 import safe "base" Data.Semigroup qualified as Semigroup
 import safe "base" Data.String (String)
 import safe "base" Data.Tuple (Solo)
@@ -41,20 +41,7 @@ import "hedgehog" Hedgehog qualified
 import "hedgehog" Hedgehog.Gen qualified as Gen
 import safe "hedgehog" Hedgehog.Main qualified as Hedgehog
 import "hedgehog" Hedgehog.Range qualified as Range
-import safe "base" Prelude (Bounded, Integral, fromIntegral, maxBound, minBound, (+), (-))
-
-_genRealFrac :: forall a. (Bounded a, Integral a) => Hedgehog.Gen (Ratio a)
-_genRealFrac =
-  -- TODO: Was hoping for an implementation like this, but it errors (during
-  --       shrinking?) with a zero denominator.
-  -- Gen.realFrac_
-  --   . Range.linearFracFrom 0 (fromIntegral $ minBound @a)
-  --   . fromIntegral
-  --   $ maxBound @a
-  liftA2 (%) (Gen.integral . Range.linearFrom 0 (minBound @a) $ maxBound @a)
-    . Gen.integral
-    . Range.linear 1
-    $ maxBound @a
+import safe "base" Prelude (fromIntegral, maxBound, minBound, (+), (-))
 
 -- | Never empty, since it can obscure how combinations were reached.
 genString :: Hedgehog.Gen String
@@ -97,9 +84,6 @@ relWriter4 (a, b, c, x) (a', b', c', y) =
 --   in base and this package. `IO` and @(->) r@ have no `Data.Eq.Eq`, so
 --   their `Duoidal` instances go unchecked.
 --
---  __FIXME__: For some reason, the `Ratio` cases generate (or shrink to) “Ratio
---             has zero denominator”.
---
 -- @since 0.0.1
 main :: IO ()
 main =
@@ -112,22 +96,12 @@ main =
           -- The range bound here pushes it just outside the range of
           -- `Bounded` integers.
           $ fromIntegral (maxBound :: Word64) + 1,
-        -- Duoid.validate @(Ratio Int) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int16) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int32) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int64) (<=) genRealFrac,
-        -- Duoid.validate @(Ratio Int8) (<=) genRealFrac,
         Duoid.validateNormal @(Ratio Natural) (<=)
           . Gen.realFrac_
           -- The range bounds here push it just outside the range of
           -- `Bounded` integers.
           . Range.linearFracFrom 0 0
           $ fromIntegral (maxBound :: Word64) + 1,
-        -- Duoid.validateNormal @(Ratio Word) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word16) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word32) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word64) (<=) genRealFrac,
-        -- Duoid.validateNormal @(Ratio Word8) (<=) genRealFrac,
         Duoid.validate @Rational (<=)
           . Gen.realFrac_
           -- The range bounds here push it just outside the range of
