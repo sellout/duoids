@@ -75,6 +75,7 @@ interchange rel =
           $ liftM2 (,) fc fd
     )
     $ \(fa, fb, fc, fd) -> liftM2 (,) (liftA2 (,) fa fc) $ liftA2 (,) fb fd
+{-# INLINEABLE interchange #-}
 
 -- | The parallel unit relates to the sequential composition of parallel
 --   units.
@@ -83,6 +84,7 @@ interchange rel =
 splitUnit :: (Duoidal f) => (f (a, a) -> f (a, a) -> Bool) -> Law a (f (a, a))
 splitUnit rel =
   Law rel (pure . (\a -> (a, a))) $ uncurry (liftM2 (,)) . (pure &&& pure)
+{-# INLINEABLE splitUnit #-}
 
 -- | The parallel composition of sequential units relates to the sequential
 --   unit.
@@ -91,6 +93,7 @@ splitUnit rel =
 joinUnit :: (Duoidal f) => (f a -> f a -> Bool) -> Law a (f a)
 joinUnit rel =
   Law rel (fmap fst . uncurry (liftA2 (,)) . (return &&& return)) return
+{-# INLINEABLE joinUnit #-}
 
 -- | The parallel unit relates to the sequential unit.
 --

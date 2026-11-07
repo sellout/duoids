@@ -45,6 +45,7 @@ showType a =
    in if ' ' `elem` typeStr
         then "(" <> typeStr <> ")"
         else typeStr
+{-# INLINEABLE showType #-}
 
 nonNormalProperties ::
   forall a.
@@ -62,6 +63,7 @@ nonNormalProperties laws genA =
     ("joinUnit", Hedgehog.property . Hedgehog.assert $ checkLaw (joinUnit laws) ()),
     ("swapUnit", Hedgehog.property . Hedgehog.assert $ checkLaw (swapUnit laws) ())
   ]
+{-# INLINEABLE nonNormalProperties #-}
 
 -- | A property group that checks the `Duoid` laws for a type.
 --
@@ -75,6 +77,7 @@ validate ::
 validate fn genA =
   Hedgehog.Group (Hedgehog.GroupName $ "Duoid " <> showType genA) $
     nonNormalProperties (Duoid.getLaws fn) genA
+{-# INLINEABLE validate #-}
 
 -- | A property group that checks the `Duoid.Normal` laws for a type.
 --
@@ -93,3 +96,4 @@ validateNormal fn genA =
             Hedgehog.property . Hedgehog.assert $ checkLaw (unswapUnit laws) ()
           )
           : nonNormalProperties (duoidLaws laws) genA
+{-# INLINEABLE validateNormal #-}

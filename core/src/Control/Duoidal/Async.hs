@@ -114,7 +114,8 @@ concurrently' left right collect = do
     stop
     pure r
 
--- | The exception thrown by `cancel` to terminate a thread.
+-- | The exception thrown by `Control.Concurrent.Async.cancel` to terminate a
+--   thread.
 type AsyncCancelled :: Type
 data AsyncCancelled = AsyncCancelled
   deriving stock (Show, Eq)
