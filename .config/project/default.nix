@@ -120,6 +120,9 @@
       config.services.haskell-ci.include);
   services.haskell-ci = {
     inherit (self.lib) defaultGhcVersion;
+    ## Measured from this repo’s CI caches (average of
+    ## https://github.com/sellout/duoids/actions/caches matching “-build-”).
+    cache.storeSize = 30; # MiB
     checkBounds.extraDependencyVersions = [
       "doctest-0.22.6" # Needed by Nixpkgs 25.05
       "doctest-0.24.0" # Needed by Nixpkgs 25.05
