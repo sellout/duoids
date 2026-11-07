@@ -14,11 +14,11 @@
 --
 -- So, for example, when using this, you should ignore the existence of
 -- `Data.Either.Validation.Validation`, and always work in `Either` (and
--- `ExceptT`), then, using these operators instead of the usual `Applicative`
--- and `Monad` operators, you will have behavior that correctly mixes the
--- accumulation of errors with the monadic "first failure" semantics. This
--- should lawfully always do what you want, without running into the
--- “`Applicative` semantics must match `Monad` semantics” problem.
+-- `Control.Monad.Except.ExceptT`), then, using these operators instead of the
+-- usual `Applicative` and `Monad` operators, you will have behavior that
+-- correctly mixes the accumulation of errors with the monadic "first failure"
+-- semantics. This should lawfully always do what you want, without running into
+-- the “`Applicative` semantics must match `Monad` semantics” problem.
 --
 -- - ♢ – `Parallel`
 -- - ★ – `Sequential`
@@ -31,9 +31,9 @@
 -- __NB__: It’s easy to use the wrong operations when this module is imported,
 --         because they have the same names as ones that already exist in
 --         @base@. Here are some recommendations on how to use it successfully.
---      1. If you import everything qualified anyway and use `NoDefaultPrelude`,
---         great – qualify this module, and use it alongside qualified
---         `Applicative` and `Monad` operations.
+--      1. If you import everything qualified anyway and use
+--         @NoImplicitPrelude@, great – qualify this module, and use it
+--         alongside qualified `Applicative` and `Monad` operations.
 --      2. If you use unqualified imports, I recommend importing this module
 --         unqualified /with no import list/. You will likely get errors like
 --         either “ambigious occurrence of …” or “couldn’t satisfy constraint
@@ -67,7 +67,7 @@
 -- Left ["Couldn't merge records x and y"]
 --
 --   But when the independent steps fail, we collect all the independent
---   failures, like `Validation`.
+--   failures, like `Data.Either.Validation`.
 --
 -- >>> :{
 -- Duoidal.do
@@ -77,8 +77,8 @@
 -- :}
 -- Left ["Couldn't find record x","Couldn't find record y"]
 --
---  __NB__: `fail` isn’t part of the `Duoidal` interface, so this just
---          re-exports the one from `MonadFail`.
+--  __NB__: `Control.Monad.Fail.fail` isn’t part of the `Duoidal` interface, so
+--          this just re-exports the one from `Control.Monad.Fail.MonadFail`.
 --
 -- ## resources
 --
@@ -287,8 +287,8 @@ instance
 --     . bimap (from leftIdentity) (from rightIdentity) -- (J ★ I) ♢ (I ★ J)
 --     . from leftIdentity --                                    I ♢ I
 
--- | `Normal` `Duoidal` functors are ones where the two identities (`pure` and
---   `return`) are isomorphic.
+-- | type `Normal` `Duoidal` functors are ones where the two identities (`pure`
+--   and `return`) are isomorphic.
 --
 -- @since 0.0.1
 type Normal :: (Type -> Type) -> Constraint
@@ -664,14 +664,15 @@ sequentialBind (Sequential a) f = Sequential $ a Base.>>= (getSequential . f)
 -- - `Maybe`
 -- - `Proxy`
 --
---   You can also wrap types that already have `Duoidal` instances in
---   `Commutative` as well (as long as they have an unwrapped `Monad` instance).
---   If their existing `Duoidal` instance isn’t the commutative one, the
---   `Commutative` wrapper will give you the commutative one. I don’t know if
---   this one is correct, but if you have a commutative writer (say, @`Writer`
---   (`Set` `Char`)@), wrapping it in `Commutative` would give you a `Duoidal`
---   instance that behaves commutatively. However, @`Set` a@ should already have
---   a commutative `Duoid` instance, so I don’t think it actually buys you
+--   You can also wrap types that already have `Duoidal` instances in `type
+--   Commutative` as well (as long as they have an unwrapped `Monad` instance).
+--   If their existing `Duoidal` instance isn’t the commutative one, the `type
+--   Commutative` wrapper will give you the commutative one. I don’t know if
+--   this one is correct, but if you have a commutative writer (say,
+--   @`Control.Monad.Trans.Writer.Writer` (`Data.Set.Set` `Data.Char.Char`)@),
+--   wrapping it in `Commutative` would give you a `Duoidal` instance that
+--   behaves commutatively. However, @`Data.Set.Set` a@ should already have a
+--   commutative `Duoid` instance, so I don’t think it actually buys you
 --   anything.
 --
 --  __NB__: Don’t use this newtype to turn a non-commutative `Monad` into a

@@ -87,12 +87,14 @@ getLaws fn =
       swapUnit = swapUnitLaw fn,
       interchange = interchangeLaw fn
     }
+{-# INLINEABLE getLaws #-}
 
 -- | Additional law for `Duoid.Normal` duoids.
 --
 -- @since 0.0.1
 unswapUnitLaw :: (Duoid.Normal a) => (a -> a -> Bool) -> Law () a
 unswapUnitLaw fn = Law fn (\() -> sempty) (\() -> pempty)
+{-# INLINEABLE unswapUnitLaw #-}
 
 -- | The laws that every `Duoid.Normal` has to satisfy.
 --
@@ -112,3 +114,4 @@ getNormalLaws fn =
     { duoidLaws = getLaws fn,
       unswapUnit = unswapUnitLaw fn
     }
+{-# INLINEABLE getNormalLaws #-}

@@ -64,7 +64,7 @@ newtype Seq a = Seq {getSeq :: a}
   deriving stock (Eq, Ord, Read, Show, Functor, Foldable, Traversable)
 
 -- | Instances for `Duoid` are automatically coalesced from the respective
---   @`Monoid` `.` `Par`@ and @`Monoid` `.` `Seq`@ instances.
+--   @`Monoid` `.` `value Par`@ and @`Monoid` `.` `value Seq`@ instances.
 --
 -- @since 0.0.1
 type Duoid :: Type -> Constraint

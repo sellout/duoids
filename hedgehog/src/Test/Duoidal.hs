@@ -50,8 +50,9 @@ showType a =
         then "(" <> typeStr <> ")"
         else typeStr
 
--- | `Sequential`’s `Applicative` agrees with its `Monad`, as
---   [`Monad`’s laws](https://hackage.haskell.org/package/base/docs/Control-Monad.html#t:Monad)
+-- | `Control.Duoidal.Sequential`’s `Control.Applicative.Applicative` agrees
+--   with its `Control.Monad.Monad`, as [`Control.Monad.Monad`’s
+--   laws](https://hackage.haskell.org/package/base/docs/Control-Monad.html#t:Monad)
 --   require: “@(\<*\>) = ap@”.
 apBind :: (Duoidal f, Eq (f (a, b))) => Law (f a, f b) (f (a, b))
 apBind =
@@ -72,6 +73,7 @@ apBindProperty genF =
           . (Hedgehog.assert . checkLaw apBind <=< Hedgehog.forAll)
           $ (,) <$> genFInt <*> genFInt
       )
+{-# INLINEABLE apBindProperty #-}
 
 unitProperty ::
   (Show a) =>
@@ -109,6 +111,7 @@ nonNormalProperties rel genF =
         unitProperty "swapUnit" (swapUnit rel) genInt,
         apBindProperty genF
       ]
+{-# INLINEABLE nonNormalProperties #-}
 
 -- | A property group that checks the `Duoidal` laws for a functor.
 --
@@ -129,11 +132,12 @@ validate rel genF =
   Hedgehog.Group
     (Hedgehog.GroupName $ "Duoidal " <> showType (Proxy :: Proxy f))
     $ nonNormalProperties rel genF
+{-# INLINEABLE validate #-}
 
--- | A property group that checks that a functor’s `Sequential` `Applicative`
---   agrees with its `Monad`. This is one of the properties `validate` checks,
---   for a functor that doesn’t satisfy the others, or whose
---   arguments to `validate` are hard to write.
+-- | A property group that checks that a functor’s `Control.Duoidal.Sequential`
+--   `Control.Applicative.Applicative` agrees with its `Control.Monad.Monad`.
+--   This is one of the properties `validate` checks, for a functor that doesn’t
+--   satisfy the others, or whose arguments to `validate` are hard to write.
 --
 -- @since 99999
 validateSequential ::
@@ -174,3 +178,4 @@ validateNormal rel genF =
       (unswapUnit rel)
       (Gen.int32 Range.linearBounded)
       : nonNormalProperties rel genF
+{-# INLINEABLE validateNormal #-}
