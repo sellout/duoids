@@ -24,6 +24,7 @@ where
 
 import "base" Control.Applicative (liftA2)
 import "base" Control.Category ((.))
+import "base" Data.Bool ((||))
 import "base" Data.Eq (Eq, (==))
 import "base" Data.Foldable (Foldable)
 import "base" Data.Function (const, ($))
@@ -269,33 +270,22 @@ instance Semigroup (Par Rational) where
 instance Monoid (Par Rational) where
   mempty = Par (-infinity)
 
--- | Saturating addition.
+-- | Addition, including infinities. @-∞@ absorbs everything, including @∞@;
+--   letting @-∞ + ∞@ be anything finite breaks associativity.
 --
 -- @since 0.0.1
 instance Semigroup (Seq Rational) where
   Seq x <> Seq y =
     Seq $
-      if x == (-infinity)
-        then
-          if y == infinity
-            then 0
-            else -infinity
+      if x == -infinity || y == -infinity
+        then -infinity
         else
-          if x == infinity
-            then
-              if y == (-infinity)
-                then 0
-                else infinity
-            else
-              if y == (-infinity)
-                then -infinity
-                else
-                  if y == infinity
-                    then infinity
-                    else x + y
+          if x == infinity || y == infinity
+            then infinity
+            else x + y
   stimes = stimesMonoid
 
--- | Saturating addition.
+-- | Addition, including infinities.
 --
 -- @since 0.0.1
 instance Monoid (Seq Rational) where
