@@ -19,19 +19,20 @@ module Data.Duoid
     (|-|),
     (>->),
     Comm (Comm),
+    rationalLE,
   )
 where
 
 import "base" Control.Applicative (liftA2)
 import "base" Control.Category ((.))
-import "base" Data.Bool ((||))
-import "base" Data.Eq (Eq, (==))
+import "base" Data.Bool (Bool, bool, (&&), (||))
+import "base" Data.Eq (Eq, (/=), (==))
 import "base" Data.Foldable (Foldable)
 import "base" Data.Function (const, ($))
 import "base" Data.Functor (Functor)
 import "base" Data.Kind (Constraint, Type)
 import "base" Data.Monoid (Monoid, mempty)
-import "base" Data.Ord (Ord, max, (<))
+import "base" Data.Ord (Ord, max, (<), (<=))
 import "base" Data.Ratio (Ratio, Rational)
 import "base" Data.Semigroup
   ( Semigroup,
@@ -257,14 +258,23 @@ instance Semigroup (Seq (Ratio Natural)) where
 instance Monoid (Seq (Ratio Natural)) where
   mempty = Seq 0
 
--- | Maximum.
+-- | The order on `Rational` extended with the infinities, which @`Ord`
+--   `Rational`@ misorders
+--   (https://gitlab.haskell.org/ghc/ghc/-/work_items/2076).
+--
+-- @since 99999
+rationalLE :: Rational -> Rational -> Bool
+rationalLE x y =
+  x == -infinity || y == infinity || x /= infinity && y /= -infinity && x <= y
+
+-- | Maximum, extended to the infinities.
 --
 -- @since 0.0.1
 instance Semigroup (Par Rational) where
-  Par x <> Par y = Par $ max x y
+  Par x <> Par y = Par . bool x y $ rationalLE x y
   stimes = stimesIdempotentMonoid
 
--- | Maximum.
+-- | Maximum, extended to the infinities.
 --
 -- @since 0.0.1
 instance Monoid (Par Rational) where
