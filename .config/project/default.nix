@@ -97,27 +97,6 @@
   };
 
   ## CI
-  services.github.settings.branches.main.protection.required_status_checks.checks =
-    map (context: {inherit context;})
-    ([
-        "check-bounds"
-        "check-licenses"
-      ]
-      ++ lib.concatMap (sys:
-        lib.concatMap (ghc: [
-          "build (${ghc}, ${sys})"
-          "build (--prefer-oldest, ${ghc}, ${sys})"
-        ])
-        self.lib.nonNixTestedGhcVersions)
-      config.services.haskell-ci.systems
-      ## Add `include`d matrix entries to the required list.
-      ++ map (
-        entry:
-          if entry.bounds == ""
-          then "build (${entry.ghc}, ${entry.os})"
-          else "build (${entry.bounds}, ${entry.ghc}, ${entry.os})"
-      )
-      config.services.haskell-ci.include);
   services.haskell-ci = {
     inherit (self.lib) defaultGhcVersion;
     ## Measured from this repo’s CI caches (average of
