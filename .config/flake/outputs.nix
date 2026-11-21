@@ -37,6 +37,8 @@
         old.configureFlags
         ++ [
           "--ghc-options=-Werror"
+          "--ghc-options=-Wall-missed-specialisations"
+          "--ghc-options=-Wmissed-specialisations"
           "--ghc-options=-Wwarn=all-missed-specialisations"
           "--ghc-options=-Wwarn=missed-specialisations"
         ];
